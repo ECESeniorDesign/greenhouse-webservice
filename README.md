@@ -12,7 +12,7 @@ Production Webservice for Use on the Greenhouse
 
 ## Running the webservice
 
-Invoke `python app/webservice.py` and navigate to "http://localhost:4000"
+Invoke `python app/webservice.py` and navigate to "http://localhost:5000"
 
 ## Running tests
 
