@@ -65,6 +65,76 @@ class TestPlant(unittest.TestCase):
         self.assertEqual(json_plant.plant_database_id, 1)
         self.assertEqual(json_plant.mature_on, dt(2016, 1, 10))
 
+    def test_gets_current_light_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        plant.sensor_data_points.build(sensor_name="light",
+                                       sensor_value=15).save()
+        self.assertEqual(plant.light, 15)
+
+    def test_returns_0_with_no_light_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        self.assertEqual(plant.light, 0)
+
+    def test_gets_current_water_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        plant.sensor_data_points.build(sensor_name="water",
+                                       sensor_value=15).save()
+        self.assertEqual(plant.water, 15)
+
+    def test_returns_0_with_no_water_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        self.assertEqual(plant.water, 0)
+
+    def test_gets_current_temperature_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        plant.sensor_data_points.build(sensor_name="temperature",
+                                       sensor_value=15).save()
+        self.assertEqual(plant.temperature, 15)
+
+    def test_returns_0_with_no_temperature_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        self.assertEqual(plant.temperature, 0)
+
+    def test_gets_current_humidity_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        plant.sensor_data_points.build(sensor_name="humidity",
+                                       sensor_value=15).save()
+        self.assertEqual(plant.humidity, 15)
+
+    def test_returns_0_with_no_humidity_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        self.assertEqual(plant.humidity, 0)
+
+    def test_gets_current_acidity_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        plant.sensor_data_points.build(sensor_name="acidity",
+                                       sensor_value=15).save()
+        self.assertEqual(plant.acidity, 15)
+
+    def test_returns_0_with_no_acidity_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        self.assertEqual(plant.acidity, 0)
+
+    def test_raises_attribute_error_on_bad_access(self):
+        with self.assertRaises(AttributeError):
+            self.plant_fixture().asfasdfsadfas
+
+    def test_records_sensor_data(self):
+        plant = self.plant_fixture()
+        plant.save()
+        plant.record_sensor("light", 17.6)
+        self.assertEqual(plant.light, 17.6)
+
     def plant_fixture(self):
         return models.Plant(name="testPlant",
                             photo_url="testPlant.png",
@@ -99,8 +169,89 @@ class TestPlant(unittest.TestCase):
                }
 
 
+class TestPlantDatabase(unittest.TestCase):
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.json")
+    @mock.patch("app.models.urllib2")
+    @mock.patch("app.models.Plant.from_json")
+    def test_lists_plants_in_plant_database(self, from_json, urllib2, json):
+        response = mock.Mock(name="response")
+        json_response = {'json': 'response'}
+        plant = mock.Mock(name="plant")
+        urllib2.urlopen.return_value = response
+        json.load.return_value = [json_response]
+        from_json.return_value = plant
+        self.assertEqual(models.PlantDatabase.all_plants(), [plant])
+        urllib2.urlopen.assert_called_with("http://PLANT_DATABASE/api/plants")
+        from_json.assert_called_with(json_response)
+        json.load.assert_called_with(response)
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.urllib2.urlopen")
+    def test_list_raises_if_cannot_connect_to_plant_database(self, urlopen):
+        urlopen.side_effect = models.urllib2.URLError(
+            "[Errno 61] Connection refused")
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.PlantDatabase.all_plants()
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.json")
+    @mock.patch("app.models.urllib2")
+    @mock.patch("app.models.Plant.from_json")
+    def test_finds_plant_in_plant_database(self, from_json, urllib2, json):
+        response = mock.Mock(name="response")
+        json_response = {'json': 'response'}
+        plant = mock.Mock(name="plant")
+        urllib2.urlopen.return_value = response
+        json.load.return_value = json_response
+        from_json.return_value = plant
+        self.assertEqual(models.PlantDatabase.find_plant(1), plant)
+        urllib2.urlopen.assert_called_with(
+            "http://PLANT_DATABASE/api/plants/1")
+        from_json.assert_called_with(json_response)
+        json.load.assert_called_with(response)
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.urllib2.urlopen")
+    def test_find_raises_if_cannot_connect_to_plant_database(self, urlopen):
+        urlopen.side_effect = models.urllib2.URLError(
+            "[Errno 61] Connection refused")
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.PlantDatabase.find_plant(1)
+
+
 class TestSensorDataPoint(unittest.TestCase):
-    pass
+
+    def setUp(self):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+        self.point = models.SensorDataPoint(plant_id=1, sensor_value=17.3)
+
+    def tearDown(self):
+        models.lazy_record.close_db()
+
+    def test_validates_sensor_name(self):
+        self.point.sensor_name = "water"
+        self.assertTrue(self.point.is_valid())
+
+    def test_validates_sensor_name(self):
+        self.point.sensor_name = "cactus"
+        self.assertFalse(self.point.is_valid())
+
+    def test_scope_looks_up_by_sensor_name(self):
+        in_scope = models.SensorDataPoint(plant_id=1,
+                                          sensor_value=17.3,
+                                          sensor_name="light")
+        in_scope.save()
+        out_scope = models.SensorDataPoint(plant_id=1,
+                                           sensor_value=17.3,
+                                           sensor_name="water")
+        out_scope.save()
+        self.assertIn(in_scope, models.SensorDataPoint.light())
+        self.assertNotIn(out_scope, models.SensorDataPoint.light())
+
 
 if __name__ == '__main__':
     unittest.main()

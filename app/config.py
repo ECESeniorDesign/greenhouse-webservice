@@ -7,3 +7,4 @@ DEBUG = True
 SECRET_KEY = "development key"
 USERNAME = "admin"
 PASSWORD = "password"
+PLANT_DATABASE = "localhost:4000"
