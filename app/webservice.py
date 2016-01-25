@@ -1,12 +1,14 @@
 import flask
 import models
 import router
+import config
 
 app = flask.Flask(__name__)
+app.secret_key = config.SECRET_KEY
 router = router.Router(app)
 
 
-@router.route("/plants", only=["index", "new"])
+@router.route("/plants", exclude=["edit", "update"])
 class PlantsController(object):
     
     @staticmethod
@@ -23,7 +25,34 @@ class PlantsController(object):
                                      plants=plants,
                                      slot_id=slot_id)
 
-router.root(PlantsController, "index")
+    @staticmethod
+    def create():
+        plant = models.PlantDatabase.find_plant(
+                    flask.request.form["plant_database_id"])
+        try:
+            plant.save()
+            flask.flash("'{}' successfully added.".format(plant.name))
+            return flask.redirect(flask.url_for('PlantsController.show',
+                                                id=plant.slot_id))
+        except models.lazy_record.RecordInvalid:
+            flask.flash("Could not add plant.")
+            return flask.redirect(flask.url_for('PlantsController.index'))
 
-if __name__ == '__main__':
-    app.run()
+    @staticmethod
+    def show(id):
+        plant = models.Plant.for_slot(id)
+        return flask.render_template("plants/show.html",
+                                     plant=plant)
+
+    @staticmethod
+    def destroy(id):
+        plant = models.Plant.for_slot(id)
+        plant.destroy()
+        return flask.redirect(flask.url_for('PlantsController.index'))
+
+@app.errorhandler(models.lazy_record.RecordNotFound)
+def redirect_to_index(error):
+    flask.flash("Record Not Found", 'error')
+    return flask.redirect(flask.url_for('PlantsController.index'))
+
+router.root(PlantsController, "index")

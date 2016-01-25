@@ -27,6 +27,8 @@ class Router(object):
                 }
                 for method in self.methods:
                     action = getattr(klass, method)
+                    action.__name__ = "{}.{}".format(
+                        klass.__name__, action.__name__)
                     mapping = mappings[method][0]
                     html_method = mappings[method][1]
                     wrapped_action = self.app.route(mapping,
