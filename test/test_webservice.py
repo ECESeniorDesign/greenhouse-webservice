@@ -58,6 +58,13 @@ class TestRouting(unittest.TestCase):
                                            plants=[plant],
                                            slot_id=2)
 
+    @mock.patch("app.webservice.models.PlantDatabase.all_plants")
+    def test_plants_new_redirects_on_connection_failure(self, all_plants):
+        all_plants.side_effect = webservice.models.PlantDatabase.CannotConnect
+        result = self.app.get("/plants/new?slot_id=1")
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(result.headers['Location'], 'http://localhost/plants')
+
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_plants_create_redirects_to_show(self, PlantDatabase):
         PlantDatabase.find_plant.return_value = self.build_plant()

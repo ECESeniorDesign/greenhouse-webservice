@@ -51,8 +51,13 @@ class PlantsController(object):
         return flask.redirect(flask.url_for('PlantsController.index'))
 
 @app.errorhandler(models.lazy_record.RecordNotFound)
-def redirect_to_index(error):
+def rescue_record_not_found(error):
     flask.flash("Record Not Found", 'error')
+    return flask.redirect(flask.url_for('PlantsController.index'))
+
+@app.errorhandler(models.PlantDatabase.CannotConnect)
+def rescue_cannot_connect(error):
+    flask.flash("Cannot connect to Plant Database")
     return flask.redirect(flask.url_for('PlantsController.index'))
 
 router.root(PlantsController, "index")
