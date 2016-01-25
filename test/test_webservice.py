@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.webservice as webservice
 from app.config import TEST_DATABASE, SCHEMA
 
-class TestRouting(unittest.TestCase):
+class TestPlantsController(unittest.TestCase):
 
     def setUp(self):
         # create a test client
@@ -77,12 +77,13 @@ class TestRouting(unittest.TestCase):
 
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_plants_create_saves_plant(self, PlantDatabase):
-        plant = self.build_plant()
+        plant = self.build_plant(slot_id=None)
         PlantDatabase.find_plant.return_value = plant
         result = self.app.post("/plants", data=dict(
             plant_database_id=1,
             slot_id=1
         ))
+        self.assertEqual(plant.slot_id, 1)
         self.assertEqual(plant.id, 1)
 
     @mock.patch("app.webservice.models.PlantDatabase")

@@ -11,7 +11,7 @@ def main():
             lazy_record.load_schema(schema.read())
     elif sys.argv[1] in ("server", "s"):
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
-        app.webservice.app.run()
+        app.webservice.socketio.run(app.webservice.app, debug=True)
     elif sys.argv[1] == "console":
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
 

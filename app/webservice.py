@@ -2,8 +2,18 @@ import flask
 import models
 import router
 import config
+import eventlet
+eventlet.monkey_patch()
+from flask_socketio import SocketIO
+import jinja2
+import os
+
+template_dir = os.path.join(os.path.dirname(__file__), "templates")
+loader = jinja2.FileSystemLoader(template_dir)
+environment = jinja2.Environment(loader=loader)
 
 app = flask.Flask(__name__)
+socketio = SocketIO(app, async_mode='eventlet')
 app.secret_key = config.SECRET_KEY
 router = router.Router(app)
 
@@ -30,15 +40,16 @@ class PlantsController(object):
         plant = models.PlantDatabase.find_plant(
                     flask.request.form["plant_database_id"])
         if plant is None:
-            flask.flash("Plant does not exist.")
+            flask.flash("Plant does not exist.", 'error')
             return flask.redirect(flask.url_for("PlantsController.index"))
         try:
+            plant.update(slot_id=flask.request.form["slot_id"])
             plant.save()
-            flask.flash("'{}' successfully added.".format(plant.name))
+            flask.flash("'{}' successfully added.".format(plant.name), 'notice')
             return flask.redirect(flask.url_for('PlantsController.show',
                                                 id=plant.slot_id))
         except models.lazy_record.RecordInvalid:
-            flask.flash("Could not add plant.")
+            flask.flash("Could not add plant.", 'error')
             return flask.redirect(flask.url_for('PlantsController.index'))
 
     @staticmethod
@@ -60,7 +71,7 @@ def rescue_record_not_found(error):
 
 @app.errorhandler(models.PlantDatabase.CannotConnect)
 def rescue_cannot_connect(error):
-    flask.flash("Cannot connect to Plant Database")
+    flask.flash("Cannot connect to Plant Database", 'error')
     return flask.redirect(flask.url_for('PlantsController.index'))
 
 router.root(PlantsController, "index")
