@@ -12,7 +12,11 @@ Production Webservice for Use on the Greenhouse
 
 ## Running the webservice
 
-Invoke `python app/webservice.py` and navigate to "http://localhost:5000"
+Invoke `make server` and navigate to "http://localhost:5000"
+
+## Starting the Interactive Console
+
+Invoke `make console`
 
 ## Running tests
 

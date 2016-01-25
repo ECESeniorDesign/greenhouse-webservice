@@ -5,3 +5,9 @@ install: requirements.txt
 
 db:
 	python setup.py db
+
+server:
+	python setup.py server
+
+console:
+	python -i setup.py console
