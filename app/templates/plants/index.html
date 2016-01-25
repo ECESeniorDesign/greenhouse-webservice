@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block header %}
+<title>Greenhouse</title>
+{% endblock %}
+{% block body %}
+<div class="row">
+  <div class="col-sm-4 col-sm-offset-4 text-center">
+    <div class="row">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" width="150px">
+      <h1>Greenhouse</h1>
+    </div>
+    {% for plant, slot_id in plants %}
+      {% include "plants/_plant.html" %}
+    {% endfor %}
+    <div class="row vitals">
+      <div class="media">
+        <div class="media-left media-top">
+          <i class="wi wi-raindrop" style="width:15px; font-size: 22px; vertical-align: middle;"></i>
+        </div>
+        <div class="media-body">
+          <div class="progress">
+            <div class="progress-bar" style="width: 64%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

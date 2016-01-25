@@ -1,0 +1,17 @@
+{% if plant %}
+  <div class="row">
+    <div class="col-md-10 col-md-offset-1">
+      <a href="/plants/{{ plant.slot_id }}" class="thumbnail">
+        <img src="{{ plant.photo_url }}" width="100%">
+      </a>
+    </div>
+  </div>
+{% else %}
+  <div class="row">
+    <div class="col-md-10 col-md-offset-1">
+      <a href="/plants/new?slot_id={{ slot_id }}" class="thumbnail new-plant-thumbnail">
+        <i class="fa fa-plus new-plant-plus"></i>
+      </a>
+    </div>
+  </div>  
+{% endif %}

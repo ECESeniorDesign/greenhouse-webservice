@@ -1,0 +1,47 @@
+<!doctype html>
+<html id="main">
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://raw.githubusercontent.com/aterrien/jQuery-Knob/1.2.13/dist/jquery.knob.min.js"></script>
+    <script src="{{ url_for('static', filename='js/Chart.min.js') }}"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/weather-icons.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/flash.js') }}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  </head>
+  <body>
+    {% block header %}{% endblock %}
+    <div class="container-fluid" id="body">
+      {% block nav %}{% endblock %}
+      {% with messages = get_flashed_messages(category_filter=["error"]) %}
+        {% if messages %}
+          <div class="row">
+            {% for message in messages %}
+              <div class="alert alert-danger text-center" role="alert">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% with messages = get_flashed_messages(category_filter=["notice"]) %}
+        {% if messages %}
+          <div class="row">
+            {% for message in messages %}
+              <div class="alert alert-success text-center" role="alert">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      <div id="inner-content">
+        {% block body %}{% endblock %}
+        {#
+        <script src="{{ url_for('static', filename='js/modernizr.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/dynamicpage.js') }}"></script>
+        #}
+      </div>
+    </div>
+  </body>
+</html>
