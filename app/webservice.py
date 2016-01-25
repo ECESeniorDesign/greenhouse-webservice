@@ -29,6 +29,9 @@ class PlantsController(object):
     def create():
         plant = models.PlantDatabase.find_plant(
                     flask.request.form["plant_database_id"])
+        if plant is None:
+            flask.flash("Plant does not exist.")
+            return flask.redirect(flask.url_for("PlantsController.index"))
         try:
             plant.save()
             flask.flash("'{}' successfully added.".format(plant.name))

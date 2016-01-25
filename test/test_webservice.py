@@ -96,6 +96,16 @@ class TestRouting(unittest.TestCase):
         self.assertEqual(result.status_code, 302)
         self.assertEqual(result.headers['Location'], 'http://localhost/plants')
 
+    @mock.patch("app.webservice.models.PlantDatabase")
+    def test_plants_create_redirects_to_index_if_no_plant(self, PlantDatabase):
+        PlantDatabase.find_plant.return_value = None
+        result = self.app.post("/plants", data=dict(
+            plant_database_id=1,
+            slot_id=1
+        ))
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(result.headers['Location'], 'http://localhost/plants')
+
     def test_plants_show_status_code(self):
         self.create_plant(slot_id=1)
         result = self.app.get('/plants/1')

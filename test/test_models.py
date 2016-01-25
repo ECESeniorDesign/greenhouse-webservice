@@ -213,6 +213,19 @@ class TestPlantDatabase(unittest.TestCase):
         json.load.assert_called_with(response)
 
     @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.json")
+    @mock.patch("app.models.urllib2")
+    @mock.patch("app.models.Plant.from_json")
+    def test_returns_none_if_no_plant(self, from_json, urllib2, json):
+        response = mock.Mock(name="response")
+        urllib2.urlopen.return_value = response
+        json.load.return_value = None
+        self.assertEqual(models.PlantDatabase.find_plant(1), None)
+        urllib2.urlopen.assert_called_with(
+            "http://PLANT_DATABASE/api/plants/1")
+        json.load.assert_called_with(response)
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
     @mock.patch("app.models.urllib2.urlopen")
     def test_find_raises_if_cannot_connect_to_plant_database(self, urlopen):
         urlopen.side_effect = models.urllib2.URLError(

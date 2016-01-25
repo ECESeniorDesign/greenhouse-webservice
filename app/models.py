@@ -129,6 +129,9 @@ class PlantDatabase(object):
             response = urllib2.urlopen("http://{}/api/plants/{}".format(
                 PLANT_DATABASE, id))
             plant = json.load(response)
-            return Plant.from_json(plant)
+            if plant:
+                return Plant.from_json(plant)
+            else:
+                return None
         except urllib2.URLError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
