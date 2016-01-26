@@ -1,0 +1,54 @@
+{% import 'plants/vitals.jinja' as vitals %}
+{% extends "layout.html" %}
+{% block header %}
+<title>Your Plant</title>
+{% endblock %}
+{% block nav %}
+<div id="spacer"></div>
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="pull-left">
+      <a class="navbar-brand" href="/">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      </a>
+    </div>
+    {# <div class="pull-right"> #}
+    {#   <a class="navbar-brand" href="{{ url_for('PlantsController.edit', id=plant.slot_id) }}"> #}
+    {#     <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> #}
+    {#   </a> #}
+    {# </div> #}
+  </div>
+</nav>
+{% endblock%}
+{% block body %}
+<div class="row">
+  <div class="col-sm-4 col-sm-offset-4 text-center">
+    <div class="hidden" id="slot_id" slot_id="{{ plant.slot_id }}"></div>
+    <div class="row">
+      <h1>{{ plant.name }}</h1>
+      <img src="{{ plant.photo_url }}">
+    </div>
+    <div class="row">
+      {% if not plant.mature %}
+        <h4>Days Until Maturity</h4>
+        <input type="text" value="{{ plant.mature_in }}" class="dial" data-min="{{ plant.maturity_dial_min }}" data-max="{{ plant.maturity_dial_max }}" data-angleOffset="-125" data-angleArc="250" data-fgColor="#66CC66" data-readOnly="true">
+      {% else %}
+        <h4>Plant is Mature</h4>
+      {% endif %}
+    </div>
+    <div class="row vitals">
+      <h4>Vitals</h4>
+      <div id="vitals">
+        {{ vitals.vitalbar(plant, "light")|safe }}
+        {{ vitals.vitalbar(plant, "water")|safe }}
+        {{ vitals.vitalinfo(plant, "humidity")|safe }}
+        {{ vitals.vitalinfo(plant, "acidity")|safe }}
+      </div>
+    </div>
+    <div class="row">
+      <a href="/plants/{{plant.slot_id}}/logs" class="btn btn-block btn-primary">Plant Logs</a>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/plants/show.js') }}"></script>
+{% endblock %}

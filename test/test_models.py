@@ -29,6 +29,18 @@ class TestPlant(unittest.TestCase):
         datetime.today.return_value = dt(2016, 1, 17)
         self.assertEqual(plant.mature_in, models.Plant.Mature)
 
+    @mock.patch("app.models.datetime.datetime")
+    def test_mature_when_not_mature_is_false(self, datetime):
+        plant = self.plant_fixture()
+        datetime.today.return_value = dt(2016, 1, 3)
+        self.assertFalse(plant.mature)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_mature_when_mature_is_true(self, datetime):
+        plant = self.plant_fixture()
+        datetime.today.return_value = dt(2016, 1, 17)
+        self.assertTrue(plant.mature)
+
     def test_only_allows_one_plant_per_slot_id(self):
         self.plant_fixture().save()
         self.assertFalse(self.plant_fixture().is_valid())

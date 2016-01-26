@@ -7,6 +7,7 @@ eventlet.monkey_patch()
 from flask_socketio import SocketIO
 import jinja2
 import os
+import presenters
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 loader = jinja2.FileSystemLoader(template_dir)
@@ -55,8 +56,9 @@ class PlantsController(object):
     @staticmethod
     def show(id):
         plant = models.Plant.for_slot(id)
+        presenter = presenters.PlantPresenter(plant)
         return flask.render_template("plants/show.html",
-                                     plant=plant)
+                                     plant=presenter)
 
     @staticmethod
     def destroy(id):

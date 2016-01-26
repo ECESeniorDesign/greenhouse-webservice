@@ -112,12 +112,14 @@ class TestPlantsController(unittest.TestCase):
         result = self.app.get('/plants/1')
         self.assertEqual(result.status_code, 200)
 
+    @mock.patch("app.webservice.presenters.PlantPresenter")
     @mock.patch("app.webservice.flask.render_template")
-    def test_renders_plants_show_with_plant(self, render_template):
+    def test_renders_plants_show_with_plant(self, render_template, PlantPresenter):
         plant = self.create_plant(slot_id=1)
         self.app.get('/plants/1')
+        PlantPresenter.assert_called_with(plant)
         render_template.assert_called_with("plants/show.html",
-                                           plant=plant)
+                                           plant=PlantPresenter.return_value)
 
     def test_show_redirects_to_index_when_plant_does_not_exist(self):
         response = self.app.get('/plants/1')

@@ -58,6 +58,10 @@ class Plant(lazy_record.Base):
         else:
             return Plant.Mature
 
+    @property
+    def mature(self):
+        return self.mature_in == Plant.Mature
+
     @classmethod
     def for_slot(Plant, slot_id, raise_if_not_found=True):
         try:

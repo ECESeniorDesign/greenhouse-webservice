@@ -1,0 +1,51 @@
+{% macro vitalbar(plant, metric) %}
+<div class="media">
+  <div class="media-left media-top">
+    <i class="{{ plant.icon_for(metric) }}" style="width:15px"></i>
+  </div>
+  <div class="media-body">
+    <div class="progress">
+      {% if plant.over_ideal(metric) %}
+        <div class="progress-bar {{ plant.bar_class(metric) }}" style="width: {{ plant.bar_width(metric) }}%">
+        </div>
+        <div class="progress-bar progress-bar-danger" style="width: {{ plant.error_bar_width(metric) }}%">
+        </div>
+      {% else %}
+        <div class="progress-bar {{ plant.bar_class(metric) }}" style="width: {{ plant.bar_width(metric) }}%">
+        </div>
+        <div class="progress-bar progress-bar-danger progress-bar-striped" style="width: {{ plant.error_bar_width(metric) }}%">
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="media-right media-top">
+    {% if plant.within_tolerance(metric) %}
+      <i class="fa fa-check" style="color:#66CC66; width:15px;"></i>
+    {% else %}
+      <i class="fa fa-times" style="color:#FF0000; width:15px;"></i>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro vitalinfo(plant, metric) %}
+<div class="media">
+  <div class="media-left">
+    <strong>{{ metric.title() }}</strong>
+  </div>
+  <div class="media-body">
+  </div>
+  <div class="media-right">
+    <div class="vital-right">
+      {% if plant.within_tolerance(metric) %}
+        <span style="color:#66CC66">{{ plant.formatted_value(metric) }}</span>
+      {% else %}
+        <span style="color:#FF0000">{{ plant.formatted_value(metric) }}</span>
+        {# <button type="button" class="btn btn-link btn-infopop" id="{{ vital.name }}" data-placement="left" data-toggle="popover" title="Current {{ vital.name }} is {{ vital.formatted_value }}!" data-content="Ideally, it would be about {{ vital.formatted_ideal_value }} (&#177; {{ vital.formatted_tolerance }}). {{ vital.corrective_action }}"> #}
+        {#   <i class="fa fa-info-circle"></i> #}
+        {# </button> #}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
