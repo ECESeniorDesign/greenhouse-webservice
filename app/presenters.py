@@ -8,10 +8,11 @@ class PlantPresenter(object):
         self.plant = plant
 
     def formatted_value(self, metric):
+        value = getattr(self.plant, metric)
         if metric == "humidity":
-            return "{0:0.1%}".format(getattr(self.plant, metric))
+            return "{0:0.1%}".format(value)
         else:
-            return getattr(self.plant, metric)
+            return "{0:0.1f}".format(value)
 
     @property
     def maturity_dial_min(self):
@@ -51,6 +52,7 @@ class PlantPresenter(object):
     def bar_class(self, metric):
         classes = {
             "light": "progress-bar-sun",
+            "water": "progress-bar-water",
         }
         return classes.get(metric, "")
 

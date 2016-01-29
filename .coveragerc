@@ -2,3 +2,4 @@
 omit = */lib/*
 exclude_lines =
   def __repr__
+  pragma: no cover

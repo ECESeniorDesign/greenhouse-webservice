@@ -65,7 +65,7 @@ class TestPlantPresenter(unittest.TestCase):
     def test_bar_class(self):
         presenter = presenters.PlantPresenter(plant())
         self.assertEqual(presenter.bar_class("light"), "progress-bar-sun")
-        self.assertEqual(presenter.bar_class("water"), "")
+        self.assertEqual(presenter.bar_class("water"), "progress-bar-water")
 
     def test_formats_humidity_to_percentage(self):
         presenter = presenters.PlantPresenter(plant())

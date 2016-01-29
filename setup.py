@@ -13,7 +13,7 @@ def main():
     elif sys.argv[1] in ("server", "s"):
         coffee(app.webservice.app)
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
-        app.webservice.socketio.run(app.webservice.app, debug=True)
+        app.webservice.run()
     elif sys.argv[1] == "console":
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
 

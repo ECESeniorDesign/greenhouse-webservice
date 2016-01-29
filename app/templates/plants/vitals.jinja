@@ -5,31 +5,24 @@
   </div>
   <div class="media-body">
     <div class="progress">
-      {% if plant.over_ideal(metric) %}
-        <div class="progress-bar {{ plant.bar_class(metric) }}" style="width: {{ plant.bar_width(metric) }}%">
-        </div>
-        <div class="progress-bar progress-bar-danger" style="width: {{ plant.error_bar_width(metric) }}%">
-        </div>
-      {% else %}
-        <div class="progress-bar {{ plant.bar_class(metric) }}" style="width: {{ plant.bar_width(metric) }}%">
-        </div>
-        <div class="progress-bar progress-bar-danger progress-bar-striped" style="width: {{ plant.error_bar_width(metric) }}%">
-        </div>
-      {% endif %}
+      <div class="progress-bar {{ plant.bar_class(metric) }}" id="{{ plant.bar_class(metric) }}" style="width: {{ plant.bar_width(metric) }}%">
+      </div>
+      <div class="progress-bar progress-bar-danger" id="error_{{ plant.bar_class(metric) }}" style="width: {{ plant.error_bar_width(metric) }}%">
+      </div>
     </div>
   </div>
   <div class="media-right media-top">
     {% if plant.within_tolerance(metric) %}
-      <i class="fa fa-check" style="color:#66CC66; width:15px;"></i>
+      <i class="fa fa-check" id="indicator_{{ plant.bar_class(metric) }}" style="color:#66CC66; width:15px;"></i>
     {% else %}
-      <i class="fa fa-times" style="color:#FF0000; width:15px;"></i>
+      <i class="fa fa-times" id="indicator_{{ plant.bar_class(metric) }}" style="color:#FF0000; width:15px;"></i>
     {% endif %}
   </div>
 </div>
 {% endmacro %}
 
 {% macro vitalinfo(plant, metric) %}
-<div class="media">
+<div class="media" id="{{metric}}">
   <div class="media-left">
     <strong>{{ metric.title() }}</strong>
   </div>
