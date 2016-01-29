@@ -1,4 +1,5 @@
 import flask
+from flaskext.coffee import coffee
 import models
 import router
 import config
@@ -14,6 +15,7 @@ loader = jinja2.FileSystemLoader(template_dir)
 environment = jinja2.Environment(loader=loader)
 
 app = flask.Flask(__name__)
+coffee(app)
 socketio = SocketIO(app, async_mode='eventlet')
 app.secret_key = config.SECRET_KEY
 router = router.Router(app)

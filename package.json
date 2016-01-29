@@ -1,0 +1,11 @@
+{
+  "name": "greenhouse-webservice",
+  "dependencies": {
+    "coffee-script": "~1.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ECESeniorDesign/greenhouse-webservice"
+  },
+  "license": "MIT"
+}
