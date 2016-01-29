@@ -66,6 +66,26 @@ class PlantsController(object):
         plant.destroy()
         return flask.redirect(flask.url_for('PlantsController.index'))
 
+@router.route("/plants/<plant_id>/logs", only=["index"])
+class LogsController(object):
+
+    @staticmethod
+    def index(plant_id):
+        plant = models.Plant.for_slot(plant_id)
+        return flask.render_template("logs/index.html",
+                                     plant=plant)
+
+@socketio.on("request-chart", namespace="/plants")
+def send_chart_data(slot_id):
+    plant = models.Plant.for_slot(slot_id, False)
+    presenter = presenters.ChartDataPresenter(plant)
+    socketio.emit('ideal-chart-data', {
+        'chart-content': presenter.ideal_chart_data()
+    }, namespace="/plants/{}".format(plant.slot_id), broadcast=False)
+    socketio.emit('history-chart-data', {
+        'chart-content': presenter.history_chart_data()
+    }, namespace="/plants/{}".format(plant.slot_id), broadcast=False)
+
 @app.errorhandler(models.lazy_record.RecordNotFound)
 def rescue_record_not_found(error):
     flask.flash("Record Not Found", 'error')

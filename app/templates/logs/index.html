@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block header %}
+<title>Logs For {{ plant.name }}</title>
+{% endblock %}
+{% block nav %}
+<div id="spacer"></div>
+<nav class="navbar navbar-default navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="pull-left">
+      <a class="navbar-brand destroy-chart" href="{{ url_for('PlantsController.show', id=plant.slot_id) }}">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+      </a>
+    </div>
+    {# <div class="pull-right"> #}
+    {#   <a class="navbar-brand destroy-chart" href="/plants/{{plant.slot_id}}/settings"> #}
+    {#     <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> #}
+    {#   </a> #}
+    {# </div> #}
+  </div>
+</nav>
+{% endblock %}
+{% block body %}
+<div class="row text-center">
+  <h1>{{ plant.name }}</h1>
+  <div class="hidden" id="slot_id" slot_id="{{ plant.slot_id }}"></div>
+  <div class="row text-center">
+    <canvas id="plant_ideal" width="400" height="400"></canvas>
+  </div>
+  <div class="row text-center">
+    <canvas id="plant_history" width="400" height="400"></canvas>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/logs/index.js') }}"></script>
+{% endblock %}
