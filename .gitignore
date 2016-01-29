@@ -60,6 +60,7 @@ docs/_build/
 target/
 
 #generated js
+app/static/js/*.js
 app/static/js/*/*.js
 
 #Ipython Notebook
