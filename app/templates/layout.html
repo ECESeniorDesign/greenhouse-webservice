@@ -26,6 +26,15 @@
           </div>
         {% endif %}
       {% endwith %}
+      {% with messages = get_flashed_messages(category_filter=["warning"]) %}
+        {% if messages %}
+          <div class="row">
+            {% for message in messages %}
+              <div class="alert alert-warning text-center" role="alert">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
       {% with messages = get_flashed_messages(category_filter=["notice"]) %}
         {% if messages %}
           <div class="row">

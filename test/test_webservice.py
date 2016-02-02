@@ -89,6 +89,17 @@ class TestPlantsController(unittest.TestCase):
         self.assertEqual(plant.id, 1)
 
     @mock.patch("app.webservice.models.PlantDatabase")
+    def test_plants_create_saves_plant_settings(self, PlantDatabase):
+        plant = build_plant(slot_id=None)
+        PlantDatabase.find_plant.return_value = plant
+        self.assertEqual(len(webservice.models.PlantSetting.all()), 0)
+        result = self.app.post("/plants", data=dict(
+            plant_database_id=1,
+            slot_id=1
+        ))
+        self.assertEqual(webservice.models.PlantSetting.last().plant, plant)
+
+    @mock.patch("app.webservice.models.PlantDatabase")
     def test_plants_create_redirects_to_index_on_failure(self, PlantDatabase):
         create_plant(slot_id=1)
         PlantDatabase.find_plant.return_value = build_plant(slot_id=1)
@@ -171,6 +182,233 @@ class TestLogsController(unittest.TestCase):
         response = self.app.get('/plants/1/logs')
         render_template.assert_called_with('logs/index.html',
                                            plant=self.plant)
+
+class TestPlantSettingsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+        self.plant = create_plant(slot_id=1)
+        self.setting = webservice.models.PlantSetting.create(plant=self.plant)
+        self.threshold = webservice.models.NotificationThreshold.create(
+                             plant_setting=self.setting,
+                             sensor_name="light",
+                             deviation_percent=15,
+                             deviation_time=3,
+                             triggered=False)
+
+    def test_index_response_code(self):
+        response = self.app.get("/plants/1/settings")
+        self.assertEqual(response.status_code, 200)
+
+    @mock.patch("app.webservice.models.Plant")
+    @mock.patch("app.webservice.flask.render_template")
+    def test_index_shows_all_settings(self, render_template, Plant):
+        Plant.for_slot.return_value.plant_setting.\
+            notification_thresholds = [self.threshold]
+        names = webservice.models.SensorDataPoint.SENSORS
+        response = self.app.get("/plants/1/settings")
+        render_template.assert_called_with("plant_settings/index.html",
+                                           thresholds=[self.threshold],
+                                           plant=Plant.for_slot.return_value,
+                                           names=names)
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_create_adds_new_thresholds(self, notification_thresholds):
+        self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "1.25"],
+            threshold_id=["", ""],
+            delete=["false", "false"],
+        ))
+        calls = [
+                    mock.call(sensor_name="water",
+                              deviation_percent=11,
+                              deviation_time=1.0,
+                              triggered=False),
+                    mock.call(sensor_name="humidity",
+                              deviation_percent=15,
+                              deviation_time=1.25,
+                              triggered=False),
+                ]
+        notification_thresholds.create.assert_has_calls(calls)
+        self.assertEqual(len(notification_thresholds.create.mock_calls), 2)
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_create_rejects_invalid_thresholds(self, notification_thresholds):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity", ""],
+            deviation_percent=["11", "15", ""],
+            deviation_time=["1", "1.25", ""],
+            threshold_id=["", "", ""],
+            delete=["false", "false", "false"],
+        ))
+        calls = [
+                    mock.call(sensor_name="water",
+                              deviation_percent=11,
+                              deviation_time=1.0,
+                              triggered=False),
+                    mock.call(sensor_name="humidity",
+                              deviation_percent=15,
+                              deviation_time=1.25,
+                              triggered=False),
+                ]
+        self.assertEqual(response.status_code, 302)
+        notification_thresholds.create.assert_has_calls(calls)
+        self.assertEqual(len(notification_thresholds.create.mock_calls), 2)
+
+    @mock.patch("app.webservice.flask.flash")
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_create_flash_differs_with_rejected(self, notification_thresholds, flash):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", ""],
+            threshold_id=["", ""],
+            delete=["false", "false"],
+        ))
+        self.assertEqual(response.status_code, 302)
+        flash.assert_called_with("Some Settings Updated", 'warning')
+
+    @mock.patch("app.webservice.flask.flash")
+    def test_redirects_to_index(self, flash):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "1.25"],
+            threshold_id=["", ""],
+            delete=["false", "false"],
+        ))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'],
+                         'http://localhost/plants/1/settings')
+        flash.assert_called_with("Settings Updated", 'notice')
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_updates_existing_thresholds(self, notification_thresholds):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "1.25"],
+            threshold_id=["", "1"],
+            delete=["false", "false"],
+        ))
+        notification_thresholds.create.assert_called_once_with(
+            sensor_name="water",
+            deviation_percent=11,
+            deviation_time=1.0,
+            triggered=False
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(mock.call(id=1), notification_thresholds.where.mock_calls)
+        notification_thresholds.where.return_value.first.assert_called_with()
+        old = notification_thresholds.where.return_value.first.return_value
+        old.update.assert_called_with(sensor_name="humidity",
+                                      deviation_percent=15,
+                                      deviation_time=1.25,
+                                      triggered=False)
+        old.save.assert_called_with()
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_update_rejects_thresholds(self, notification_thresholds):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", ""],
+            threshold_id=["", "1"],
+            delete=["false", "false"],
+        ))
+        notification_thresholds.create.assert_called_once_with(
+            sensor_name="water",
+            deviation_percent=11,
+            deviation_time=1.0,
+            triggered=False
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(notification_thresholds.where.called)
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_doesnt_update_deleted_thresholds(self, notification_thresholds):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "1.25"],
+            threshold_id=["", "1"],
+            delete=["false", "true"],
+        ))
+        self.assertFalse(notification_thresholds.where.return_value.first.called)
+        self.assertEqual(response.status_code, 302)
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_deletes_deleted_thresholds(self, notification_thresholds):
+        old_threshold = mock.Mock(name="threshold")
+        notification_thresholds.where.return_value = [old_threshold]
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "1.25"],
+            threshold_id=["", "1"],
+            delete=["false", "true"],
+        ))
+        notification_thresholds.where.assert_called_with(id=[1])
+        old_threshold.destroy.assert_called_with()
+        self.assertEqual(response.status_code, 302)
+
+    @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
+    def test_deletes_when_invalid(self, notification_thresholds):
+        old_threshold = mock.Mock(name="threshold")
+        notification_thresholds.where.return_value = [old_threshold]
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", ""],
+            threshold_id=["", "1"],
+            delete=["false", "true"],
+        ))
+        notification_thresholds.where.assert_called_with(id=[1])
+        old_threshold.destroy.assert_called_with()
+        self.assertEqual(response.status_code, 302)
+
+    @mock.patch("app.webservice.flask.flash")
+    def test_create_flash_differs_with_invalid(self, flash):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "0"],
+            threshold_id=["", ""],
+            delete=["false", "false"],
+        ))
+        self.assertEqual(response.status_code, 302)
+        flash.assert_called_with("Some Settings Updated", 'warning')
+
+    @mock.patch("app.webservice.flask.flash")
+    def test_update_flash_differs_with_invalid(self, flash):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["11", "15"],
+            deviation_time=["1", "0"],
+            threshold_id=["", "1"],
+            delete=["false", "false"],
+        ))
+        self.assertEqual(response.status_code, 302)
+        flash.assert_called_with("Some Settings Updated", 'warning')
+
+    @mock.patch("app.webservice.flask.flash")
+    def test_update_flash_differs_with_no_valid(self, flash):
+        response = self.app.post("/plants/1/settings", data=dict(
+            attribute=["water", "humidity"],
+            deviation_percent=["15"],
+            deviation_time=["0"],
+            threshold_id=["1"],
+            delete=["false"],
+        ))
+        self.assertEqual(response.status_code, 302)
+        flash.assert_called_with("Settings could not be updated", 'error')
 
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",

@@ -11,11 +11,11 @@
         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
       </a>
     </div>
-    {# <div class="pull-right"> #}
-    {#   <a class="navbar-brand destroy-chart" href="/plants/{{plant.slot_id}}/settings"> #}
-    {#     <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> #}
-    {#   </a> #}
-    {# </div> #}
+    <div class="pull-right">
+      <a class="navbar-brand destroy-chart" href="{{ url_for('PlantSettingsController.index', plant_id=plant.slot_id) }}">
+        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+      </a>
+    </div>
   </div>
 </nav>
 {% endblock %}

@@ -12,11 +12,11 @@
         <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
       </a>
     </div>
-    {# <div class="pull-right"> #}
-    {#   <a class="navbar-brand" href="{{ url_for('PlantsController.edit', id=plant.slot_id) }}"> #}
-    {#     <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> #}
-    {#   </a> #}
-    {# </div> #}
+    <div class="pull-right">
+      <a class="navbar-brand" href="{{ url_for('PlantSettingsController.index', plant_id=plant.slot_id) }}">
+        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+      </a>
+    </div>
   </div>
 </nav>
 {% endblock%}

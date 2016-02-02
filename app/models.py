@@ -6,7 +6,7 @@ import lazy_record
 from lazy_record.validations import *
 from lazy_record.associations import *
 
-
+@has_one("plant_setting")
 @has_many("sensor_data_points")
 class Plant(lazy_record.Base):
 
@@ -82,7 +82,6 @@ class Plant(lazy_record.Base):
             json_object["maturity"])
         return plant
 
-
 @belongs_to("plant")
 class SensorDataPoint(lazy_record.Base):
 
@@ -109,6 +108,34 @@ class SensorDataPoint(lazy_record.Base):
         "sensor_name": lambda record: record.sensor_name in SensorDataPoint.SENSORS
     }
 
+@has_many("notification_thresholds")
+@belongs_to("plant")
+class PlantSetting(lazy_record.Base):
+    pass
+
+@belongs_to("plant_setting")
+class NotificationThreshold(lazy_record.Base):
+
+    __attributes__ = {
+        'sensor_name': str,
+        'deviation_percent': int,
+        'deviation_time': float,
+        'triggered': bool,
+    }
+
+    __validates__ = {
+        "sensor_name": lambda record: record.sensor_name in SensorDataPoint.SENSORS,
+        "triggered": lambda record: record.triggered in (True, False),
+        # Change to present when lazy_record is updated to 0.4.2 or 0.5.0
+        'deviation_percent': lambda record: bool(record.deviation_percent),
+        'deviation_time': lambda record: bool(record.deviation_time),
+    }
+
+    # lazy_record doesn't support through queries up a belongs_to
+    @property
+    def sensor_data_points(self):
+        return self.plant_setting.plant.sensor_data_points.where(
+            sensor_name=self.sensor_name)
 
 class PlantDatabase(object):
 

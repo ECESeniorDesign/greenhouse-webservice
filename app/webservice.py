@@ -48,6 +48,7 @@ class PlantsController(object):
             return flask.redirect(flask.url_for("PlantsController.index"))
         try:
             plant.update(slot_id=flask.request.form["slot_id"])
+            plant.plant_setting = models.PlantSetting()
             plant.save()
             flask.flash("'{}' successfully added.".format(plant.name), 'notice')
             return flask.redirect(flask.url_for('PlantsController.show',
@@ -77,6 +78,121 @@ class LogsController(object):
         plant = models.Plant.for_slot(plant_id)
         return flask.render_template("logs/index.html",
                                      plant=plant)
+
+@router.route("/plants/<plant_id>/settings", only=["index", "create"])
+class PlantSettingsController(object):
+
+    @staticmethod
+    def index(plant_id):
+        plant = models.Plant.for_slot(plant_id)
+        settings = plant.plant_setting.notification_thresholds
+        return flask.render_template("plant_settings/index.html",
+                                     thresholds=settings,
+                                     plant=plant,
+                                     names=models.SensorDataPoint.SENSORS)
+
+    @staticmethod
+    def create(plant_id):
+        plant = models.Plant.for_slot(plant_id)
+        setting = plant.plant_setting
+        thresholds = setting.notification_thresholds
+        form = flask.request.form
+        # Delete
+        ids_to_delete = list(PlantSettingsController.deleted_thresholds(form))
+        if ids_to_delete:
+            for threshold in thresholds.where(id=ids_to_delete):
+                threshold.destroy()
+        failures = 0
+        # Create
+        for kw in PlantSettingsController.new_thresholds(form):
+            try:
+                thresholds.create(**kw)
+            except models.lazy_record.RecordInvalid:
+                failures += 1
+        # Update
+        for id, kw in PlantSettingsController.old_thresholds(form):
+            threshold = thresholds.where(id=id).first()
+            threshold.update(**kw)
+            try:
+                threshold.save()
+            except models.lazy_record.RecordInvalid:
+                failures += 1
+        some_succeeded = \
+            len(list(PlantSettingsController.all_thresholds(form))) > 0 and \
+            len(list(PlantSettingsController.all_thresholds(form))) > failures
+
+        if PlantSettingsController.form_valid(form) and not failures:
+            flask.flash("Settings Updated", 'notice')
+        elif some_succeeded:
+            flask.flash("Some Settings Updated", 'warning')
+        else:
+            flask.flash("Settings could not be updated", 'error')
+        return flask.redirect(flask.url_for('PlantSettingsController.index',
+                                            plant_id=plant_id))
+
+    @staticmethod
+    def new_thresholds(form):
+        for attr, percent, time, thresh_id, deleted in \
+                PlantSettingsController.all_thresholds(form):
+            if thresh_id == "":
+                # New record
+                yield {
+                    'sensor_name': str(attr),
+                    'deviation_percent': int(float(percent)),
+                    'deviation_time': float(time),
+                    'triggered': False,
+                }
+
+    @staticmethod
+    def all_thresholds(form):
+        thresholds = zip(form.getlist("attribute"),
+                         form.getlist("deviation_percent"),
+                         form.getlist("deviation_time"),
+                         form.getlist("threshold_id"),
+                         form.getlist("delete"))
+        for attr, percent, time, thresh_id, deleted in thresholds:
+            if "" in (attr, percent, time) or deleted != "false":
+                continue
+            yield attr, percent, time, thresh_id, deleted
+
+    @staticmethod
+    def old_thresholds(form):
+        for attr, percent, time, thresh_id, deleted in \
+                PlantSettingsController.all_thresholds(form):
+            if thresh_id != "":
+                # Old record
+                yield int(thresh_id), {
+                    'sensor_name': str(attr),
+                    'deviation_percent': int(float(percent)),
+                    'deviation_time': float(time),
+                    'triggered': False,
+                }
+
+    @staticmethod
+    def deleted_thresholds(form):
+        thresholds = zip(form.getlist("attribute"),
+                         form.getlist("deviation_percent"),
+                         form.getlist("deviation_time"),
+                         form.getlist("threshold_id"),
+                         form.getlist("delete"))
+        for attr, percent, time, thresh_id, deleted in thresholds:
+            if deleted != "false" and thresh_id != "":
+                # Existing record
+                yield int(thresh_id)
+
+    @staticmethod
+    def form_valid(form):
+        all_thresholds = zip(form.getlist("attribute"),
+                             form.getlist("deviation_percent"),
+                             form.getlist("deviation_time"),
+                             form.getlist("threshold_id"),
+                             form.getlist("delete"))
+        for attr, percent, time, thresh_id, deleted in all_thresholds:
+            if deleted != "false":
+                continue
+            if "" in (attr, percent, time) and not (attr == percent == time):
+                return False
+        return True
 
 router.root(PlantsController, "index")
 

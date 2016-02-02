@@ -27,3 +27,23 @@ create table sensor_data_points (
   created_at timestamp not null,
   updated_at timestamp not null
 );
+
+drop table if exists plant_settings;
+create table plant_settings (
+  id integer primary key autoincrement,
+  plant_id integer not null,
+  created_at timestamp not null,
+  updated_at timestamp not null
+);
+
+drop table if exists notification_thresholds;
+create table notification_thresholds (
+  id integer primary key autoincrement,
+  plant_setting_id integer not null,
+  sensor_name text not null,
+  deviation_percent integer not null,
+  deviation_time real not null,
+  triggered boolean not null,
+  created_at timestamp not null,
+  updated_at timestamp not null
+);

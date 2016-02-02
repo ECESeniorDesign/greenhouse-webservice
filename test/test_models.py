@@ -19,49 +19,49 @@ class TestPlant(unittest.TestCase):
 
     @mock.patch("app.models.datetime.datetime")
     def test_mature_in_when_not_mature_gives_number_of_days(self, datetime):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         datetime.today.return_value = dt(2016, 1, 3)
         self.assertEqual(plant.mature_in, 7)
 
     @mock.patch("app.models.datetime.datetime")
     def test_mature_in_when_mature_gives_mature(self, datetime):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         datetime.today.return_value = dt(2016, 1, 17)
         self.assertEqual(plant.mature_in, models.Plant.Mature)
 
     @mock.patch("app.models.datetime.datetime")
     def test_mature_when_not_mature_is_false(self, datetime):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         datetime.today.return_value = dt(2016, 1, 3)
         self.assertFalse(plant.mature)
 
     @mock.patch("app.models.datetime.datetime")
     def test_mature_when_mature_is_true(self, datetime):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         datetime.today.return_value = dt(2016, 1, 17)
         self.assertTrue(plant.mature)
 
     def test_only_allows_one_plant_per_slot_id(self):
-        self.plant_fixture().save()
-        self.assertFalse(self.plant_fixture().is_valid())
+        plant_fixture().save()
+        self.assertFalse(plant_fixture().is_valid())
 
     def test_permits_max_of_two_plants(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.slot_id = 3
         self.assertFalse(plant.is_valid())
 
     def test_looks_up_by_slot_id(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         self.assertEqual(models.Plant.for_slot(plant.slot_id), plant)
 
     def test_raises_if_slot_id_lookup_fails(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         with self.assertRaises(models.lazy_record.RecordNotFound):
             models.Plant.for_slot(plant.slot_id)
 
     def test_returns_None_if_slot_id_lookup_fails_with_no_raise_option(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         self.assertEqual(models.Plant.for_slot(plant.slot_id,
                                                raise_if_not_found=False),
                          None)
@@ -78,89 +78,74 @@ class TestPlant(unittest.TestCase):
         self.assertEqual(json_plant.mature_on, dt(2016, 1, 10))
 
     def test_gets_current_light_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         plant.sensor_data_points.build(sensor_name="light",
                                        sensor_value=15).save()
         self.assertEqual(plant.light, 15)
 
     def test_returns_0_with_no_light_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         self.assertEqual(plant.light, 0)
 
     def test_gets_current_water_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         plant.sensor_data_points.build(sensor_name="water",
                                        sensor_value=15).save()
         self.assertEqual(plant.water, 15)
 
     def test_returns_0_with_no_water_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         self.assertEqual(plant.water, 0)
 
     def test_gets_current_temperature_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         plant.sensor_data_points.build(sensor_name="temperature",
                                        sensor_value=15).save()
         self.assertEqual(plant.temperature, 15)
 
     def test_returns_0_with_no_temperature_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         self.assertEqual(plant.temperature, 0)
 
     def test_gets_current_humidity_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         plant.sensor_data_points.build(sensor_name="humidity",
                                        sensor_value=15).save()
         self.assertEqual(plant.humidity, 15)
 
     def test_returns_0_with_no_humidity_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         self.assertEqual(plant.humidity, 0)
 
     def test_gets_current_acidity_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         plant.sensor_data_points.build(sensor_name="acidity",
                                        sensor_value=15).save()
         self.assertEqual(plant.acidity, 15)
 
     def test_returns_0_with_no_acidity_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         self.assertEqual(plant.acidity, 0)
 
     def test_raises_attribute_error_on_bad_access(self):
         with self.assertRaises(AttributeError):
-            self.plant_fixture().asfasdfsadfas
+            plant_fixture().asfasdfsadfas
 
     def test_records_sensor_data(self):
-        plant = self.plant_fixture()
+        plant = plant_fixture()
         plant.save()
         plant.record_sensor("light", 17.6)
         self.assertEqual(plant.light, 17.6)
-
-    def plant_fixture(self):
-        return models.Plant(name="testPlant",
-                            photo_url="testPlant.png",
-                            water_ideal=57.0,
-                            water_tolerance=30.0,
-                            light_ideal=50.0,
-                            light_tolerance=10.0,
-                            acidity_ideal=9.0,
-                            acidity_tolerance=1.0,
-                            humidity_ideal=0.2,
-                            humidity_tolerance=0.1,
-                            mature_on=dt(2016, 1, 10),
-                            slot_id=1,
-                            plant_database_id=1)
 
     def plant_json(self):
         return {
@@ -276,6 +261,60 @@ class TestSensorDataPoint(unittest.TestCase):
         out_scope.save()
         self.assertIn(in_scope, models.SensorDataPoint.light())
         self.assertNotIn(out_scope, models.SensorDataPoint.light())
+
+
+class TestNotificationThreshold(unittest.TestCase):
+
+    def setUp(self):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+        self.plant = plant_fixture()
+        self.plant.plant_setting = models.PlantSetting()
+        self.plant.save()
+        self.point = models.SensorDataPoint.create(plant_id=1,
+                                                   sensor_value=17.3,
+                                                   sensor_name="light")
+        self.point2 = models.SensorDataPoint.create(plant_id=1,
+                                                    sensor_value=17.3,
+                                                    sensor_name="water")
+        self.point3 = models.SensorDataPoint.create(plant_id=2,
+                                                    sensor_name="light",
+                                                    sensor_value=17.3)
+        self.nt = self.plant.plant_setting.notification_thresholds.create(
+            sensor_name="light",
+            triggered=False,
+            deviation_percent=15,
+            deviation_time=1)
+
+    def test_knows_sensors(self):
+        self.assertIn(self.point, self.nt.sensor_data_points)
+        self.assertNotIn(self.point2, self.nt.sensor_data_points)
+        self.assertNotIn(self.point3, self.nt.sensor_data_points)
+
+    def test_is_invalid_if_time_is_zero(self):
+        self.nt.deviation_time = 0
+        self.assertFalse(self.nt.is_valid())
+
+    def test_is_invalid_if_percent_is_zero(self):
+        self.nt.deviation_percent = 0
+        self.assertFalse(self.nt.is_valid())
+
+
+def plant_fixture():
+    return models.Plant(name="testPlant",
+                        photo_url="testPlant.png",
+                        water_ideal=57.0,
+                        water_tolerance=30.0,
+                        light_ideal=50.0,
+                        light_tolerance=10.0,
+                        acidity_ideal=9.0,
+                        acidity_tolerance=1.0,
+                        humidity_ideal=0.2,
+                        humidity_tolerance=0.1,
+                        mature_on=dt(2016, 1, 10),
+                        slot_id=1,
+                        plant_database_id=1)
 
 
 if __name__ == '__main__':
