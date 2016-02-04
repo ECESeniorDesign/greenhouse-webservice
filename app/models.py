@@ -137,8 +137,12 @@ class NotificationThreshold(lazy_record.Base):
     # lazy_record doesn't support through queries up a belongs_to
     @property
     def sensor_data_points(self):
-        return self.plant_setting.plant.sensor_data_points.where(
+        return self.plant.sensor_data_points.where(
             sensor_name=self.sensor_name)
+
+    @property
+    def plant(self):
+        return self.plant_setting.plant
 
 class PlantDatabase(object):
 
