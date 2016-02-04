@@ -140,7 +140,6 @@ class PlantSettingsController(object):
                     'sensor_name': str(attr),
                     'deviation_percent': int(float(percent)),
                     'deviation_time': float(time),
-                    'triggered': False,
                 }
 
     @staticmethod
@@ -165,7 +164,6 @@ class PlantSettingsController(object):
                     'sensor_name': str(attr),
                     'deviation_percent': int(float(percent)),
                     'deviation_time': float(time),
-                    'triggered': False,
                 }
 
     @staticmethod

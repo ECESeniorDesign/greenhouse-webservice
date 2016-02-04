@@ -265,10 +265,14 @@ class TestSensorDataPoint(unittest.TestCase):
 
 class TestNotificationThreshold(unittest.TestCase):
 
-    def setUp(self):
+    @mock.patch("app.models.datetime.datetime")
+    def setUp(self, datetime):
         models.lazy_record.connect_db(TEST_DATABASE)
         with open(SCHEMA) as schema:
             models.lazy_record.load_schema(schema.read())
+        self.start_time = dt.now()
+        datetime.now.return_value = self.start_time
+        datetime.today.return_value = self.start_time
         self.plant = plant_fixture()
         self.plant.plant_setting = models.PlantSetting()
         self.plant.save()
@@ -283,7 +287,6 @@ class TestNotificationThreshold(unittest.TestCase):
                                                     sensor_value=17.3)
         self.nt = self.plant.plant_setting.notification_thresholds.create(
             sensor_name="light",
-            triggered=False,
             deviation_percent=15,
             deviation_time=1)
 
@@ -300,6 +303,8 @@ class TestNotificationThreshold(unittest.TestCase):
         self.nt.deviation_percent = 0
         self.assertFalse(self.nt.is_valid())
 
+    def test_sets_triggered_at_to_creation_time(self):
+        self.assertEqual(self.nt.triggered_at, self.start_time)
 
 def plant_fixture():
     return models.Plant(name="testPlant",

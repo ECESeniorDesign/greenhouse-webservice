@@ -43,7 +43,7 @@ create table notification_thresholds (
   sensor_name text not null,
   deviation_percent integer not null,
   deviation_time real not null,
-  triggered boolean not null,
+  triggered_at timestamp default CURRENT_TIMESTAMP,
   created_at timestamp not null,
   updated_at timestamp not null
 );

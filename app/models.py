@@ -120,16 +120,19 @@ class NotificationThreshold(lazy_record.Base):
         'sensor_name': str,
         'deviation_percent': int,
         'deviation_time': float,
-        'triggered': bool,
+        'triggered_at': lazy_record.datetime,
     }
 
     __validates__ = {
         "sensor_name": lambda record: record.sensor_name in SensorDataPoint.SENSORS,
-        "triggered": lambda record: record.triggered in (True, False),
         # Change to present when lazy_record is updated to 0.4.2 or 0.5.0
         'deviation_percent': lambda record: bool(record.deviation_percent),
         'deviation_time': lambda record: bool(record.deviation_time),
     }
+
+    def __init__(self, *args, **kwargs):
+        super(NotificationThreshold, self).__init__(*args, **kwargs)
+        self.triggered_at = datetime.datetime.now()
 
     # lazy_record doesn't support through queries up a belongs_to
     @property

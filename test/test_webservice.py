@@ -198,8 +198,7 @@ class TestPlantSettingsController(unittest.TestCase):
                              plant_setting=self.setting,
                              sensor_name="light",
                              deviation_percent=15,
-                             deviation_time=3,
-                             triggered=False)
+                             deviation_time=3)
 
     def test_index_response_code(self):
         response = self.app.get("/plants/1/settings")
@@ -229,12 +228,10 @@ class TestPlantSettingsController(unittest.TestCase):
         calls = [
                     mock.call(sensor_name="water",
                               deviation_percent=11,
-                              deviation_time=1.0,
-                              triggered=False),
+                              deviation_time=1.0),
                     mock.call(sensor_name="humidity",
                               deviation_percent=15,
-                              deviation_time=1.25,
-                              triggered=False),
+                              deviation_time=1.25),
                 ]
         notification_thresholds.create.assert_has_calls(calls)
         self.assertEqual(len(notification_thresholds.create.mock_calls), 2)
@@ -251,12 +248,10 @@ class TestPlantSettingsController(unittest.TestCase):
         calls = [
                     mock.call(sensor_name="water",
                               deviation_percent=11,
-                              deviation_time=1.0,
-                              triggered=False),
+                              deviation_time=1.0),
                     mock.call(sensor_name="humidity",
                               deviation_percent=15,
-                              deviation_time=1.25,
-                              triggered=False),
+                              deviation_time=1.25),
                 ]
         self.assertEqual(response.status_code, 302)
         notification_thresholds.create.assert_has_calls(calls)
@@ -301,8 +296,7 @@ class TestPlantSettingsController(unittest.TestCase):
         notification_thresholds.create.assert_called_once_with(
             sensor_name="water",
             deviation_percent=11,
-            deviation_time=1.0,
-            triggered=False
+            deviation_time=1.0
         )
         self.assertEqual(response.status_code, 302)
         self.assertIn(mock.call(id=1), notification_thresholds.where.mock_calls)
@@ -310,8 +304,7 @@ class TestPlantSettingsController(unittest.TestCase):
         old = notification_thresholds.where.return_value.first.return_value
         old.update.assert_called_with(sensor_name="humidity",
                                       deviation_percent=15,
-                                      deviation_time=1.25,
-                                      triggered=False)
+                                      deviation_time=1.25)
         old.save.assert_called_with()
 
     @mock.patch("app.webservice.models.PlantSetting.notification_thresholds")
@@ -326,8 +319,7 @@ class TestPlantSettingsController(unittest.TestCase):
         notification_thresholds.create.assert_called_once_with(
             sensor_name="water",
             deviation_percent=11,
-            deviation_time=1.0,
-            triggered=False
+            deviation_time=1.0
         )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(notification_thresholds.where.called)
