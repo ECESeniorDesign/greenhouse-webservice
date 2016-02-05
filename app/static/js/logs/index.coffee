@@ -13,7 +13,7 @@ $ ->
     data = stat['chart-content']
     if ideal_chart
       ideal_chart.destroy()
-    ideal_chart = new Chart(ideal_ctx).Pie(data, animateRotate: false)
+    ideal_chart = new Chart(ideal_ctx).PolarArea(data, animateRotate: false)
     return
   plant_socket.on 'history-chart-data', (stat) ->
     data = stat['chart-content']

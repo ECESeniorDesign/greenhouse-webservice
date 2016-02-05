@@ -116,24 +116,130 @@ class TestChartDataPresenter(unittest.TestCase):
 
     def test_formats_ideal_chart_data(self, Plant):
         # Note: mocking queries is awful
-        p = plant(sensor_data_points=mock.Mock(light=mock.Mock(
-            return_value=mock.Mock(where=mock.Mock(
-            return_value=mock.Mock(__len__=mock.Mock(
-            return_value=15))), __len__=mock.Mock(
-            return_value=19)))))
+        p = plant()
+        p.sensor_data_points=mock.Mock(
+            light=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=15))), __len__=mock.Mock(
+                return_value=19))),
+            water=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=5))), __len__=mock.Mock(
+                return_value=19))),
+            humidity=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=18))), __len__=mock.Mock(
+                return_value=19))),
+            temperature=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=17))), __len__=mock.Mock(
+                return_value=19))),
+            acidity=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=14))), __len__=mock.Mock(
+                return_value=19))))
         presenter = presenters.ChartDataPresenter(p)
-        self.assertEqual(presenter.ideal_chart_data(), [{
-                "label": "Out of Tolerance",
-                "value": 4,
-                "color":"#F7464A",
-                "highlight": "#FF5A5E",
+        self.assertEqual(presenter.ideal_chart_data(), [
+            {
+                "label": "Water",
+                "value": 26,
+                "color": "#0198E1",
+                "highlight": "#42C0FB",
             },
             {
-                "label": "Ideal",
-                "value": 15,
+                "label": "Light",
+                "value": 79,
+                "color": "#FDB45C",
+                "highlight": "#FFC870",
+            },
+            {
+                "label": "Humidity",
+                "value": 95,
+                "color": "#949FB1",
+                "highlight": "#A8B3C5",
+            },
+            {
+                "label": "Acidity",
+                "value": 74,
                 "color": "#46BFBD",
                 "highlight": "#5AD3D1",
-            }])
+            },
+            {
+                "label": "Temperature",
+                "value": 89,
+                "color": "#F7464A",
+                "highlight": "#FF5A5E",
+            },
+        ])
+
+    def test_formats_ideal_chart_data_with_no_data(self, Plant):
+        # Note: mocking queries is awful
+        p = plant()
+        p.sensor_data_points=mock.Mock(
+            light=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=0))), __len__=mock.Mock(
+                return_value=0))),
+            water=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=0))), __len__=mock.Mock(
+                return_value=0))),
+            humidity=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=0))), __len__=mock.Mock(
+                return_value=0))),
+            temperature=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=0))), __len__=mock.Mock(
+                return_value=0))),
+            acidity=mock.Mock(
+                return_value=mock.Mock(where=mock.Mock(
+                return_value=mock.Mock(__len__=mock.Mock(
+                return_value=0))), __len__=mock.Mock(
+                return_value=0))))
+        presenter = presenters.ChartDataPresenter(p)
+        self.assertEqual(presenter.ideal_chart_data(), [
+            {
+                "label": "Water",
+                "value": 0,
+                "color": "#0198E1",
+                "highlight": "#42C0FB",
+            },
+            {
+                "label": "Light",
+                "value": 0,
+                "color": "#FDB45C",
+                "highlight": "#FFC870",
+            },
+            {
+                "label": "Humidity",
+                "value": 0,
+                "color": "#949FB1",
+                "highlight": "#A8B3C5",
+            },
+            {
+                "label": "Acidity",
+                "value": 0,
+                "color": "#46BFBD",
+                "highlight": "#5AD3D1",
+            },
+            {
+                "label": "Temperature",
+                "value": 0,
+                "color": "#F7464A",
+                "highlight": "#FF5A5E",
+            },
+        ])
+
 
 def plant(**kwargs):
     p = mock.Mock(photo_url="testPlant.png",
