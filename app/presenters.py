@@ -145,11 +145,11 @@ class ChartDataPresenter(object):
             }
         return [sensor_data_for(sensor) for sensor in models.SensorDataPoint.SENSORS]
 
-    def history_chart_data(self):
+    def history_chart_data_for(self, sensor):
         # For some reason, it is getting 2 new points per cycle
         num_points = 8
-        light_data = [point.sensor_value for point in
-                      self.plant.sensor_data_points.light()][-num_points:]
+        points = getattr(self.plant.sensor_data_points, sensor)()
+        data = [point.sensor_value for point in points][-num_points:]
         return  {
                     "labels": [""] * num_points,
                     "datasets": [
@@ -158,7 +158,7 @@ class ChartDataPresenter(object):
                                         'strokeColor': "rgba(220,220,220,1)",
                                         'pointColor': "rgba(220,220,220,1)",
                                         'pointStrokeColor': "#fff",
-                                        'data': light_data,
+                                        'data': data,
                                     }
                                 ]
                 }

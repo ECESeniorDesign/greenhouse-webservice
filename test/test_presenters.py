@@ -96,13 +96,31 @@ class TestPlantPresenter(unittest.TestCase):
 @mock.patch("app.presenters.models.Plant")
 class TestChartDataPresenter(unittest.TestCase):
 
-    def test_formats_and_filters_history_chart_data(self, Plant):
+    def test_formats_and_filters_history_chart_data_light(self, Plant):
         data = [1.2, 3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
         p = plant(sensor_data_points=mock.Mock(light=mock.Mock(
             return_value=[mock.Mock(sensor_value=v)
                           for v in data])))
         presenter = presenters.ChartDataPresenter(p)
-        self.assertEqual(presenter.history_chart_data(), {
+        self.assertEqual(presenter.history_chart_data_for("light"), {
+            "labels": ["", "", "", "", "", "", "", ""],
+            "datasets": [{
+                            'fillColor': "rgba(220,220,220,0.2)",
+                            'strokeColor': "rgba(220,220,220,1)",
+                            'pointColor': "rgba(220,220,220,1)",
+                            'pointStrokeColor': "#fff",
+                            'data': [3.6, 12.0, 65.0, 11.0,
+                                     3.2, 6.7, 15.2, 88.5],
+                        }]
+        })
+
+    def test_formats_and_filters_history_chart_data_water(self, Plant):
+        data = [1.2, 3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
+        p = plant(sensor_data_points=mock.Mock(water=mock.Mock(
+            return_value=[mock.Mock(sensor_value=v)
+                          for v in data])))
+        presenter = presenters.ChartDataPresenter(p)
+        self.assertEqual(presenter.history_chart_data_for("water"), {
             "labels": ["", "", "", "", "", "", "", ""],
             "datasets": [{
                             'fillColor': "rgba(220,220,220,0.2)",

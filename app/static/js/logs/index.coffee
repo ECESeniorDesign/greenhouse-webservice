@@ -9,6 +9,7 @@ $ ->
   socket = io.connect('http://' + document.domain + ':' + location.port + namespace)
   ideal_chart = null
   history_chart = null
+  chart_value = "water"
   plant_socket.on 'ideal-chart-data', (stat) ->
     data = stat['chart-content']
     if ideal_chart
@@ -16,19 +17,22 @@ $ ->
     ideal_chart = new Chart(ideal_ctx).PolarArea(data, animateRotate: false)
     return
   plant_socket.on 'history-chart-data', (stat) ->
-    data = stat['chart-content']
+    data = stat['chart-content'][chart_value]
     if history_chart
       history_chart.destroy()
     history_chart = new Chart(history_ctx).Line(data,
-      animation: false
-      scaleOverride: true
-      scaleSteps: 5
-      scaleStepWidth: 20
-      scaleStartValue: 0)
+      animation: false)
     return
   socket.on 'data-update', (msg) ->
     socket.emit 'request-chart', slot_id
     return
+
+  $("#history-chart-select").find("button").click ->
+    $("#history-chart-select").find(".active").removeClass("active")
+    $(this).addClass("active")
+    chart_value = $(this).attr("name")
+    socket.emit 'request-chart', slot_id
+
   # Send the initial request for chart data
   socket.emit 'request-chart', slot_id
   return

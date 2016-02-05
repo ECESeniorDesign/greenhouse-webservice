@@ -181,7 +181,12 @@ class TestLogsController(unittest.TestCase):
     def test_index_renders_template(self, render_template):
         response = self.app.get('/plants/1/logs')
         render_template.assert_called_with('logs/index.html',
-                                           plant=self.plant)
+                                           plant=self.plant,
+                                           sensors=list(
+                                                   enumerate(webservice\
+                                                             .models\
+                                                             .SensorDataPoint\
+                                                             .SENSORS)))
 
 class TestPlantSettingsController(unittest.TestCase):
 

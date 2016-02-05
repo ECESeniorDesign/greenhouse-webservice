@@ -27,6 +27,17 @@
     <canvas id="plant_ideal" width="400" height="400"></canvas>
   </div>
   <div class="row text-center">
+    <div class="btn-group" role="group" id="history-chart-select">
+      {% for index, sensor in sensors %}
+        {% if index == 0 %}
+          <button type="button" class="btn btn-default active" name="{{ sensor }}">{{sensor.title()}}</button>
+        {% else %}
+          <button type="button" class="btn btn-default" name="{{ sensor }}">{{sensor.title()}}</button>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  <div class="row text-center">
     <canvas id="plant_history" width="400" height="400"></canvas>
   </div>
 </div>

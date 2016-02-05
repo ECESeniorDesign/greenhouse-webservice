@@ -77,7 +77,10 @@ class LogsController(object):
     def index(plant_id):
         plant = models.Plant.for_slot(plant_id)
         return flask.render_template("logs/index.html",
-                                     plant=plant)
+                                     plant=plant,
+                                     sensors=list(
+                                             enumerate(models.SensorDataPoint\
+                                                             .SENSORS)))
 
 @router.route("/plants/<plant_id>/settings", only=["index", "create"])
 class PlantSettingsController(object):
@@ -216,7 +219,10 @@ def send_chart_data(slot_id):
         'chart-content': presenter.ideal_chart_data()
     }, namespace="/plants/{}".format(plant.slot_id), broadcast=False)
     socketio.emit('history-chart-data', {
-        'chart-content': presenter.history_chart_data()
+        'chart-content': {
+            sensor: presenter.history_chart_data_for(sensor)
+            for sensor in models.SensorDataPoint.SENSORS
+        }
     }, namespace="/plants/{}".format(plant.slot_id), broadcast=False)
 
 @socketio.on("request-data", namespace="/plants")
