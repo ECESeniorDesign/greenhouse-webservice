@@ -28,7 +28,7 @@ class PlantsController(object):
     @staticmethod
     def index():
         plants = [(models.Plant.for_slot(slot_id, False), slot_id)
-                  for slot_id in (1, 2)]
+                  for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
         return flask.render_template("plants/index.html", plants=plants)
 
     @staticmethod
@@ -259,19 +259,19 @@ def load_sensor_data():
 def create_sensor_data(): # pragma: no cover
     import random
     if config.DEBUG:
-        sun = [25, 25]
-        water = [20, 15]
-        pH = [8.1, 6.2]
-        humidity = [0.67, 0.71]
-        for i in range(2):
+        sun = [25] * config.NUMBER_OF_PLANTS
+        water = [20] * config.NUMBER_OF_PLANTS
+        pH = [8.1] * config.NUMBER_OF_PLANTS
+        humidity = [0.67] * config.NUMBER_OF_PLANTS
+        for i in range(config.NUMBER_OF_PLANTS):
             sun[i] += random.randint(-5, 5)
             sun[i] = min(max(sun[i], 0), 100)
             water[i] += random.randint(-5, 5)
             water[i] = min(max(water[i], 0), 100)
             humidity[i] = random.random()
             pH[i] = random.random() * 14
-        plants = [models.Plant.for_slot(1, False),
-                  models.Plant.for_slot(2, False)]
+        plants = [models.Plant.for_slot(slot_id, False)
+                  for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
         for index, plant in enumerate(plants):
             if plant:
                 plant.record_sensor("light", sun[index])

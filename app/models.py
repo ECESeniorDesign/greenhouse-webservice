@@ -1,7 +1,7 @@
 import datetime
 import urllib2
 import json
-from config import PLANT_DATABASE
+from config import PLANT_DATABASE, NUMBER_OF_PLANTS
 import lazy_record
 from lazy_record.validations import *
 from lazy_record.associations import *
@@ -28,7 +28,8 @@ class Plant(lazy_record.Base):
 
     __validates__ = {
         "slot_id": lambda record: unique(record, "slot_id") and \
-                                  record.slot_id in (1, 2),
+                                  record.slot_id in
+                                  range(1, NUMBER_OF_PLANTS + 1),
     }
 
     def record_sensor(self, sensor_name, sensor_value):
