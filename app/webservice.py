@@ -246,6 +246,10 @@ def send_data_to_client(slot_id):
             'within-tolerance': presenter.within_tolerance('acidity'),
             'value': presenter.formatted_value('acidity'),
         },
+        'temperature': {
+            'within-tolerance': presenter.within_tolerance('temperature'),
+            'value': presenter.formatted_value('temperature'),
+        },
     }, namespace="/plants/{}".format(plant.slot_id))
 
 # Background Tasks
@@ -263,11 +267,14 @@ def create_sensor_data(): # pragma: no cover
         water = [20] * config.NUMBER_OF_PLANTS
         pH = [8.1] * config.NUMBER_OF_PLANTS
         humidity = [0.67] * config.NUMBER_OF_PLANTS
+        temperature = [87.1] * config.NUMBER_OF_PLANTS
         for i in range(config.NUMBER_OF_PLANTS):
             sun[i] += random.randint(-5, 5)
             sun[i] = min(max(sun[i], 0), 100)
             water[i] += random.randint(-5, 5)
             water[i] = min(max(water[i], 0), 100)
+            temperature[i] += random.uniform(-5, 5)
+            temperature[i] = min(max(water[i], 0), 100)
             humidity[i] = random.random()
             pH[i] = random.random() * 14
         plants = [models.Plant.for_slot(slot_id, False)
@@ -278,6 +285,7 @@ def create_sensor_data(): # pragma: no cover
                 plant.record_sensor("water", water[index])
                 plant.record_sensor("humidity", humidity[index])
                 plant.record_sensor("acidity", pH[index])
+                plant.record_sensor("temperature", temperature[index])
 
 def run(): # pragma: no cover
     background.run()

@@ -33,6 +33,7 @@ $ ->
     update_bar(data['water'])
     update_vitalinfo('acidity', data['acidity'])
     update_vitalinfo('humidity', data['humidity'])
+    update_vitalinfo('temperature', data['temperature'])
     return
   socket.on 'data-update', (msg) ->
     socket.emit 'request-data', slot_id

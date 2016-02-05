@@ -5,7 +5,6 @@ import sys
 from datetime import datetime as dt
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.presenters as presenters
-
 class TestPlantPresenter(unittest.TestCase):
 
     def test_light_bar_width_within_tolerance(self):
@@ -70,6 +69,10 @@ class TestPlantPresenter(unittest.TestCase):
     def test_formats_humidity_to_percentage(self):
         presenter = presenters.PlantPresenter(plant())
         self.assertEqual(presenter.formatted_value("humidity"), "27.0%")
+
+    def test_formats_temperature_to_temperature(self):
+        presenter = presenters.PlantPresenter(plant())
+        self.assertEqual(presenter.formatted_value("temperature"), "71.3&deg;F")
 
     def test_delegates_to_plant_for_other_attributes(self):
         presenter = presenters.PlantPresenter(plant())
@@ -146,6 +149,9 @@ def plant(**kwargs):
                   humidity=0.27,
                   humidity_ideal=0.2,
                   humidity_tolerance=0.1,
+                  temperature=71.3,
+                  temperature_ideal=68.2,
+                  temperature_tolerance=11.2,
                   mature_on=dt(2016, 1, 10),
                   created_at=dt(2016, 1, 1),
                   updated_at=dt(2016, 1, 1),

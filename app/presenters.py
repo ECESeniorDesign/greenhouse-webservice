@@ -11,6 +11,8 @@ class PlantPresenter(object):
         value = getattr(self.plant, metric)
         if metric == "humidity":
             return "{0:0.1%}".format(value)
+        elif metric == "temperature":
+            return "{0:0.1f}&deg;F".format(value)
         else:
             return "{0:0.1f}".format(value)
 
