@@ -315,6 +315,8 @@ def plant_fixture():
                         light_tolerance=10.0,
                         acidity_ideal=9.0,
                         acidity_tolerance=1.0,
+                        temperature_ideal=55.5,
+                        temperature_tolerance=11.3,
                         humidity_ideal=0.2,
                         humidity_tolerance=0.1,
                         mature_on=dt(2016, 1, 10),

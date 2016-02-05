@@ -11,6 +11,8 @@ create table plants (
   acidity_tolerance real not null,
   humidity_ideal real not null,
   humidity_tolerance real not null,
+  temperature_ideal real not null,
+  temperature_tolerance real not null,
   mature_on timestamp not null,
   slot_id integer not null unique,
   plant_database_id integer not null,

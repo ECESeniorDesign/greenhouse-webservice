@@ -17,6 +17,8 @@ class Plant(lazy_record.Base):
         "water_tolerance": float,
         "light_ideal": float,
         "light_tolerance": float,
+        "temperature_ideal": float,
+        "temperature_tolerance": float,
         "acidity_ideal": float,
         "acidity_tolerance": float,
         "humidity_ideal": float,
