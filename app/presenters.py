@@ -87,6 +87,19 @@ class PlantPresenter(object):
         normalized_ideal = 50.0
         return normalized_ideal, normalized_current, normalized_tolerance
 
+class LogDataPresenter(object):
+
+    def __init__(self, plant):
+        self.plant = plant
+
+    def log_string(self):
+        return "\n".join(
+            "[{time}] {name} {value}".format(
+                time=point.created_at.strftime("%d/%b/%Y:%H:%M:%S"),
+                name=point.sensor_name,
+                value=point.sensor_value)
+            for point in self.plant.sensor_data_points) + "\n"
+
 class ChartDataPresenter(object):
 
     formats = {

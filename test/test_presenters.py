@@ -93,10 +93,28 @@ class TestPlantPresenter(unittest.TestCase):
         presenter = presenters.PlantPresenter(plant(water=90.0))
         self.assertFalse(presenter.over_ideal("water"))
 
-@mock.patch("app.presenters.models.Plant")
+class TestLogDataPresenter(unittest.TestCase):
+
+    def test_formats_data(self):
+        data = [
+            {"sensor_name": "water", "sensor_value": 21.4,
+                "created_at": dt(2016, 04, 11, 5, 32, 11)},
+            {"sensor_name": "light", "sensor_value": 23.4,
+                "created_at": dt(2016, 04, 11, 5, 32, 15)},
+            {"sensor_name": "humidity", "sensor_value": 0.71,
+                "created_at": dt(2016, 04, 11, 5, 32, 31)},
+        ]
+        p = plant(sensor_data_points=[mock.Mock(**point) for point in data])
+        presenter = presenters.LogDataPresenter(p)
+        self.assertEqual(presenter.log_string(),
+            "[11/Apr/2016:05:32:11] water 21.4\n"
+            "[11/Apr/2016:05:32:15] light 23.4\n"
+            "[11/Apr/2016:05:32:31] humidity 0.71\n")
+
+
 class TestChartDataPresenter(unittest.TestCase):
 
-    def test_formats_and_filters_history_chart_data_light(self, Plant):
+    def test_formats_and_filters_history_chart_data_light(self):
         data = [1.2, 3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
         p = plant(sensor_data_points=mock.Mock(light=mock.Mock(
             return_value=[mock.Mock(sensor_value=v)
@@ -114,7 +132,7 @@ class TestChartDataPresenter(unittest.TestCase):
                         }]
         })
 
-    def test_formats_and_filters_history_chart_data_water(self, Plant):
+    def test_formats_and_filters_history_chart_data_water(self):
         data = [1.2, 3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
         p = plant(sensor_data_points=mock.Mock(water=mock.Mock(
             return_value=[mock.Mock(sensor_value=v)
@@ -132,7 +150,7 @@ class TestChartDataPresenter(unittest.TestCase):
                         }]
         })
 
-    def test_formats_ideal_chart_data(self, Plant):
+    def test_formats_ideal_chart_data(self):
         # Note: mocking queries is awful
         p = plant()
         p.sensor_data_points=mock.Mock(
@@ -195,7 +213,7 @@ class TestChartDataPresenter(unittest.TestCase):
             },
         ])
 
-    def test_formats_ideal_chart_data_with_no_data(self, Plant):
+    def test_formats_ideal_chart_data_with_no_data(self):
         # Note: mocking queries is awful
         p = plant()
         p.sensor_data_points=mock.Mock(
