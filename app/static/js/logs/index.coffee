@@ -29,7 +29,7 @@ $ ->
     if history_chart
       history_chart.destroy()
     history_chart = new Chart(history_ctx).Line(data,
-      animation: false)
+      animation: false, pointDot: false)
     return
   socket.on 'data-update', (msg) ->
     socket.emit 'request-chart', slot_id

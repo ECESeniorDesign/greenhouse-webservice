@@ -280,7 +280,7 @@ def create_sensor_data(): # pragma: no cover
             water[i] += random.randint(-5, 5)
             water[i] = min(max(water[i], 0), 100)
             temperature[i] += random.uniform(-5, 5)
-            temperature[i] = min(max(water[i], 0), 100)
+            temperature[i] = min(max(temperature[i], 0), 100)
             humidity[i] = random.random()
             pH[i] = random.random() * 14
         plants = [models.Plant.for_slot(slot_id, False)
