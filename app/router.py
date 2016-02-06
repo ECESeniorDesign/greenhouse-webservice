@@ -16,6 +16,8 @@ class Router(object):
                 self.app = router_instance.app
 
             def __call__(self, klass):
+                defined_methods = [method for method in dir(klass)
+                                   if not method.startswith("__")]
                 mappings = {
                     'index': (self.base_url, 'GET'),
                     'new': (self.base_url + '/new', 'GET'),
@@ -35,9 +37,28 @@ class Router(object):
                                                     methods=[html_method])(action)
                     wrapped_action = staticmethod(wrapped_action)
                     setattr(klass, method, wrapped_action)
+                for method in defined_methods:
+                    action = getattr(klass, method)
+                    if hasattr(action, "EP"):
+                        html_method, end_url = action.EP
+                        action = action.__func__
+                        del action.EP
+                        action.__name__ = "{}.{}".format(
+                            klass.__name__, action.__name__)
+                        wrapped_action = self.app.route(
+                            self.base_url + "/" + end_url,
+                            methods=[html_method])(action)
+                        wrapped_action = staticmethod(wrapped_action)
+                        setattr(klass, method, wrapped_action)
                 return klass
 
         return route_decorator(base_url, only, exclude)
+
+    def endpoint(router_instance, end_url, method="GET"):
+        def wrapper(instance_method):
+            instance_method.EP = (method, end_url)
+            return instance_method
+        return wrapper
 
     def root(self, controller, action):
         action_func = getattr(controller, action)

@@ -82,6 +82,14 @@ class LogsController(object):
                                              enumerate(models.SensorDataPoint\
                                                              .SENSORS)))
 
+    @router.endpoint("download")
+    def download(plant_id):
+        plant = models.Plant.for_slot(plant_id)
+        presenter = presenters.LogDataPresenter(plant)
+        response = flask.Response(presenter.log_string(), mimetype="text/plain")
+        response.headers["Content-Disposition"] = 'attachment; filename=sensors.log'
+        return response
+
 @router.route("/plants/<plant_id>/settings", only=["index", "create"])
 class PlantSettingsController(object):
 

@@ -188,6 +188,21 @@ class TestLogsController(unittest.TestCase):
                                                              .SensorDataPoint\
                                                              .SENSORS)))
 
+    @mock.patch("app.webservice.presenters.LogDataPresenter")
+    @mock.patch("app.webservice.flask.Response")
+    def test_download_downloads_log_file(self, make_response, presenter):
+        created_response = mock.Mock(name="response", headers={})
+        make_response.return_value = created_response
+        response = self.app.get('/plants/1/logs/download')
+        presenter.assert_called_with(self.plant)
+        make_response.assert_called_with(presenter.return_value\
+                                                  .log_string\
+                                                  .return_value,
+                                         mimetype="text/plain")
+        self.assertEqual(created_response.headers["Content-Disposition"],
+                         "attachment; filename=sensors.log")
+
+
 class TestPlantSettingsController(unittest.TestCase):
 
     def setUp(self):

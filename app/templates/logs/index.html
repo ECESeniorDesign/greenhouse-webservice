@@ -40,6 +40,11 @@
   <div class="row text-center">
     <canvas id="plant_history" width="400" height="400"></canvas>
   </div>
+  <div class="col-sm-4 col-sm-offset-4 text-center">
+    <div class="row">
+      <a href="{{ url_for('LogsController.download', plant_id=plant.slot_id) }}" class="btn btn-block btn-primary"><i class="fa fa-download"></i> Download</a>
+    </div>
+  </div>
 </div>
 <script src="{{ url_for('static', filename='js/logs/index.js') }}"></script>
 {% endblock %}
