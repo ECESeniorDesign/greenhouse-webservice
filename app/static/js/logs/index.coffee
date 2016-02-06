@@ -1,4 +1,9 @@
 $ ->
+  zip = () ->
+    lengthArray = (arr.length for arr in arguments)
+    length = Math.min(lengthArray...)
+    for i in [0...length]
+      arr[i] for arr in arguments
   ideal_ctx = $('#plant_ideal').get(0).getContext('2d')
   history_ctx = $('#plant_history').get(0).getContext('2d')
   # Why does this feel like a hack?
@@ -13,8 +18,11 @@ $ ->
   plant_socket.on 'ideal-chart-data', (stat) ->
     data = stat['chart-content']
     if ideal_chart
-      ideal_chart.destroy()
-    ideal_chart = new Chart(ideal_ctx).PolarArea(data, animateRotate: false)
+      for ary in zip(ideal_chart.segments, data)
+        ary[0].value = ary[1]['value']
+      ideal_chart.update()
+    else
+      ideal_chart = new Chart(ideal_ctx).PolarArea(data, animateRotate: false)
     return
   plant_socket.on 'history-chart-data', (stat) ->
     data = stat['chart-content'][chart_value]
