@@ -8,6 +8,8 @@ from flask_socketio import SocketIO
 import jinja2
 import os
 import presenters
+import policies
+import services
 from task_runner import BackgroundTaskRunner
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -319,6 +321,13 @@ def create_sensor_data(): # pragma: no cover
                 plant.record_sensor("humidity", humidity[index])
                 plant.record_sensor("acidity", pH[index])
                 plant.record_sensor("temperature", temperature[index])
+
+@background.task
+def notify_plant_condition(): # pragme: no cover
+    for nt in models.NotificationThreshold.all():
+        if policies.NotificationPolicy(nt).should_notify():
+            print "NOTIFY"
+            services.Notifier(nt).notify()
 
 def run(): # pragma: no cover
     background.run()

@@ -176,3 +176,9 @@ class PlantDatabase(object):
                 return None
         except urllib2.URLError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
+
+
+class Token(lazy_record.Base):
+    __attributes__ = {
+        "token": str,
+    }

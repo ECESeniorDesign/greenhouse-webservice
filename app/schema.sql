@@ -49,3 +49,11 @@ create table notification_thresholds (
   created_at timestamp not null,
   updated_at timestamp not null
 );
+
+drop table if exists tokens;
+create table tokens (
+  id integer primary key autoincrement,
+  token text not null,
+  created_at timestamp not null,
+  updated_at timestamp not null
+);
