@@ -15,14 +15,16 @@ class TestNotificationPolicy(unittest.TestCase):
     def test_queries_for_records(self, datetime):
         self.notification_threshold\
             .sensor_data_points\
-            .where.return_value = []
+            .where.return_value = [mock.Mock(name="sensor_data_point",
+                                             sensor_value=50.0)]
         datetime.now.return_value = dt(2016, 01, 02, 12)
         self.policy.should_notify()
         self.notification_threshold\
             .sensor_data_points\
-            .where.assert_called_with("created_at > ? AND created_at > ?",
-                                      dt(2015, 05, 11),
-                                      dt(2016, 01, 02, 10, 45))
+            .where.assert_has_calls([mock.call("created_at > ?",
+                                          dt(2015, 05, 11)),
+                                     mock.call("created_at > ?",
+                                          dt(2016, 01, 02, 10, 45))])
 
     def test_should_not_notify_when_all_within_tolerance(self):
         # Hi/Lo = 93/18
@@ -37,24 +39,36 @@ class TestNotificationPolicy(unittest.TestCase):
     def test_should_notify_when_beneath_tolerance(self):
         self.notification_threshold\
             .sensor_data_points\
-            .where.return_value = [mock.Mock(name="sensor_data_point",
-                                             sensor_value=17.0)]
+            .where.side_effect = [[mock.Mock(name="sensor_data_point",
+                                             sensor_value=17.0),
+                                   mock.Mock(name="sensor_data_point",
+                                             sensor_value=50.0)],
+                                  [mock.Mock(name="sensor_data_point",
+                                             sensor_value=17.0)]]
         self.assertTrue(self.policy.should_notify())
 
     def test_should_notify_when_above_tolerance(self):
         self.notification_threshold\
             .sensor_data_points\
-            .where.return_value = [mock.Mock(name="sensor_data_point",
-                                             sensor_value=94.0)]
+            .where.side_effect = [[mock.Mock(name="sensor_data_point",
+                                             sensor_value=94.0),
+                                   mock.Mock(name="sensor_data_point",
+                                             sensor_value=50.0)],
+                                  [mock.Mock(name="sensor_data_point",
+                                             sensor_value=94.0)]]
         self.assertTrue(self.policy.should_notify())
 
     def test_should_notify_when_outside_tolerance(self):
         self.notification_threshold\
             .sensor_data_points\
-            .where.return_value = [mock.Mock(name="sensor_data_point",
+            .where.side_effect = [[mock.Mock(name="sensor_data_point",
                                              sensor_value=17.0),
                                    mock.Mock(name="sensor_data_point",
-                                             sensor_value=94.0)]
+                                             sensor_value=50.0)],
+                                  [mock.Mock(name="sensor_data_point",
+                                             sensor_value=17.0),
+                                   mock.Mock(name="sensor_data_point",
+                                             sensor_value=94.0)]]
         self.assertTrue(self.policy.should_notify())
 
     def test_should_not_notify_when_one_inside_tolerance(self):
@@ -64,6 +78,15 @@ class TestNotificationPolicy(unittest.TestCase):
                                              sensor_value=17.0),
                                    mock.Mock(name="sensor_data_point",
                                              sensor_value=21.0),
+                                   mock.Mock(name="sensor_data_point",
+                                             sensor_value=94.0)]
+        self.assertFalse(self.policy.should_notify())
+
+    def test_should_not_notify_once_already_triggered(self):
+        self.notification_threshold\
+            .sensor_data_points\
+            .where.return_value = [mock.Mock(name="sensor_data_point",
+                                             sensor_value=17.0),
                                    mock.Mock(name="sensor_data_point",
                                              sensor_value=94.0)]
         self.assertFalse(self.policy.should_notify())

@@ -10,8 +10,7 @@ class NotificationPolicy(object):
         minute_delta = (self.notification_threshold.deviation_time % 1) * 60
         return self.notification_threshold\
                    .sensor_data_points\
-                   .where("created_at > ? AND created_at > ?",
-                          self.notification_threshold.triggered_at,
+                   .where("created_at > ?",
                           datetime.datetime.now() - datetime.timedelta(
                               hours=hour_delta, minutes=minute_delta))
 
@@ -31,8 +30,19 @@ class NotificationPolicy(object):
                          (1 + allowed_difference)
         return low_threshold, high_threshold
 
+    def already_triggered(self):
+        low_threshold, high_threshold = self.thresholds()
+        points = self.notification_threshold\
+                     .sensor_data_points\
+                     .where("created_at > ?",
+                            self.notification_threshold.triggered_at)
+        return all(p.sensor_value > high_threshold or
+                   p.sensor_value < low_threshold for
+                   p in points)
+
     def should_notify(self):
         low_threshold, high_threshold = self.thresholds()
-        return all(p.sensor_value > high_threshold or
+        return not self.already_triggered() and \
+               all(p.sensor_value > high_threshold or
                    p.sensor_value < low_threshold for
                    p in self.relevant_points())
