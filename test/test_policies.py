@@ -92,6 +92,51 @@ class TestNotificationPolicy(unittest.TestCase):
         self.assertFalse(self.policy.should_notify())
 
 
+class TestTokenRefreshPolicy(unittest.TestCase):
+
+    @mock.patch("app.models.Token")
+    @mock.patch("app.policies.datetime.datetime")
+    def test_required_when_older_than_12_hours(self, datetime, Token):
+        datetime.today.return_value = dt(2016, 01, 01, 12, 01)
+        Token.last.return_value = mock.Mock(created_at=dt(2016, 01, 01))
+        self.assertTrue(policies.TokenRefreshPolicy().requires_refresh())
+
+    @mock.patch("app.models.Token")
+    @mock.patch("app.policies.datetime.datetime")
+    def test_not_required_when_newer_than_12_hours(self, datetime, Token):
+        datetime.today.return_value = dt(2016, 01, 01, 11, 59)
+        Token.last.return_value = mock.Mock(created_at=dt(2016, 01, 01))
+        self.assertFalse(policies.TokenRefreshPolicy().requires_refresh())
+
+    @mock.patch("app.models.Token")
+    @mock.patch("app.policies.datetime.datetime")
+    def test_expired_when_older_than_1_day(self, datetime, Token):
+        datetime.today.return_value = dt(2016, 01, 02, 01)
+        Token.last.return_value = mock.Mock(created_at=dt(2016, 01, 01))
+        self.assertTrue(policies.TokenRefreshPolicy().requires_authentication())
+
+    @mock.patch("app.models.Token")
+    @mock.patch("app.policies.datetime.datetime")
+    def test_not_expired_when_newer_than_1_day(self, datetime, Token):
+        datetime.today.return_value = dt(2016, 01, 01, 23, 59)
+        Token.last.return_value = mock.Mock(created_at=dt(2016, 01, 01))
+        self.assertFalse(policies.TokenRefreshPolicy().requires_authentication())
+
+    @mock.patch("app.models.Token")
+    @mock.patch("app.policies.datetime.datetime")
+    def test_not_required_when_no_token(self, datetime, Token):
+        datetime.today.return_value = dt(2016, 01, 01, 11, 59)
+        Token.last.return_value = None
+        self.assertFalse(policies.TokenRefreshPolicy().requires_refresh())
+
+    @mock.patch("app.models.Token")
+    @mock.patch("app.policies.datetime.datetime")
+    def test_expired_when_no_token(self, datetime, Token):
+        datetime.today.return_value = dt(2016, 01, 01, 23, 59)
+        Token.last.return_value = None
+        self.assertTrue(policies.TokenRefreshPolicy().requires_authentication())
+
+
 def sensor_data_points():
     return mock.Mock(name="lazy_record.Query")
 

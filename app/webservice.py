@@ -224,6 +224,19 @@ class PlantSettingsController(object):
                 return False
         return True
 
+@app.route("/login", methods=["GET"])
+def login_page():
+    return flask.render_template("sessions/new.html")
+
+@app.route("/login", methods=["POST"])
+def login():
+    form = flask.request.form
+    if models.Token.get(username=form.get("username", ""),
+                        password=form.get("password", "")):
+        return flask.redirect(flask.url_for('PlantsController.index'))
+    else:
+        return flask.render_template("sessions/new.html")
+
 router.root(PlantsController, "index")
 
 # Error Recovery
@@ -237,6 +250,13 @@ def rescue_record_not_found(error):
 def rescue_cannot_connect(error):
     flask.flash("Cannot connect to Plant Database", 'error')
     return flask.redirect(flask.url_for('PlantsController.index'))
+
+# Requests
+
+@app.before_request
+def get_token_status():
+    flask.g.token_invalid = policies.TokenRefreshPolicy()\
+                                    .requires_authentication()
 
 # SocketIO
 
@@ -326,7 +346,6 @@ def create_sensor_data(): # pragma: no cover
 def notify_plant_condition(): # pragme: no cover
     for nt in models.NotificationThreshold.all():
         if policies.NotificationPolicy(nt).should_notify():
-            print "NOTIFY"
             services.Notifier(nt).notify()
 
 def run(): # pragma: no cover

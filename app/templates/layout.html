@@ -21,7 +21,7 @@
         {% if messages %}
           <div class="row">
             {% for message in messages %}
-              <div class="alert alert-danger text-center" role="alert">{{ message }}</div>
+              <div class="alert alert-danger text-center flash" role="alert">{{ message }}</div>
             {% endfor %}
           </div>
         {% endif %}
@@ -30,7 +30,7 @@
         {% if messages %}
           <div class="row">
             {% for message in messages %}
-              <div class="alert alert-warning text-center" role="alert">{{ message }}</div>
+              <div class="alert alert-warning text-center flash" role="alert">{{ message }}</div>
             {% endfor %}
           </div>
         {% endif %}
@@ -39,11 +39,18 @@
         {% if messages %}
           <div class="row">
             {% for message in messages %}
-              <div class="alert alert-success text-center" role="alert">{{ message }}</div>
+              <div class="alert alert-success text-center flash" role="alert">{{ message }}</div>
             {% endfor %}
           </div>
         {% endif %}
       {% endwith %}
+      {% block login_warning %}
+        {% if g.token_invalid %}
+          <div class="row">
+            <div class="alert alert-warning text-center" role="alert"><strong>Warning!</strong> You won't receive notifications until you <a href="/login" class="alert-link">log into the Plant Database</a></div>
+          </div>
+        {% endif %}
+      {% endblock %}
       <div id="inner-content">
         {% block body %}{% endblock %}
         {#

@@ -306,6 +306,58 @@ class TestNotificationThreshold(unittest.TestCase):
     def test_sets_triggered_at_to_creation_time(self):
         self.assertEqual(self.nt.triggered_at, self.start_time)
 
+@mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+@mock.patch("app.models.requests.post")
+class TestToken(unittest.TestCase):
+
+    @mock.patch("app.models.datetime.datetime")
+    def setUp(self, datetime):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+
+    def test_makes_request_to_plant_database(self, post):
+        post.return_value = mock.Mock(ok=True, status_code=200,
+                                      text='{"token":"g3QAAAACZAAEZGF0YWEBZAA'
+                                           'Gc2lnbmVkbgYAdyhV01IB--4XapswheNb'
+                                           'ceQfCSoSrQRTbUJ2c="}')
+        models.Token.get(username="chaseconklin",
+                         password="mypassword")
+        post.assert_called_with("http://PLANT_DATABASE/api/token",
+                                json={'user': {'username': 'chaseconklin',
+                                               'password': 'mypassword'}})
+
+    def test_raises_cannot_connect_if_cannot_connect(self, post):
+        post.side_effect = models.requests.exceptions.ConnectionError
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.Token.get(username="chaseconklin",
+                             password="mypassword")
+
+    def test_returns_false_if_credentials_invalid(self, post):
+        post.return_value = mock.Mock(ok=False, status_code=403)
+        self.assertFalse(models.Token.get(username="chaseconklin",
+                                          password="mypassword"))
+
+    def test_returns_true_if_credentials_valid(self, post):
+        post.return_value = mock.Mock(ok=True, status_code=200,
+                                      text='{"token":"g3QAAAACZAAEZGF0YWEBZAA'
+                                           'Gc2lnbmVkbgYAdyhV01IB--4XapswheNb'
+                                           'ceQfCSoSrQRTbUJ2c="}')
+        self.assertTrue(models.Token.get(username="chaseconklin",
+                                          password="mypassword"))
+
+    def test_saves_token_if_valid(self, post):
+        post.return_value = mock.Mock(ok=True, status_code=200,
+                                      text='{"token":"g3QAAAACZAAEZGF0YWEBZAA'
+                                           'Gc2lnbmVkbgYAdyhV01IB--4XapswheNb'
+                                           'ceQfCSoSrQRTbUJ2c="}')
+        models.Token.get(username="chaseconklin",
+                         password="mypassword")
+        self.assertEqual(models.Token.last().token, "g3QAAAACZAAEZGF0YWEBZAA"
+                                                    "Gc2lnbmVkbgYAdyhV01IB--"
+                                                    "4XapswheNbceQfCSoSrQRTb"
+                                                    "UJ2c=")
+
 def plant_fixture():
     return models.Plant(name="testPlant",
                         photo_url="testPlant.png",

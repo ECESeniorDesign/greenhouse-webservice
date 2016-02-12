@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block login_warning %}
+{% endblock %}
+{% block nav %}
+  <div id="spacer"></div>
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="pull-left">
+          <a class="navbar-brand" href="/">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+  </nav>
+{% endblock %}
+{% block body %}
+  <div class="col-sm-4 col-sm-offset-4">
+    <div class="row">
+      <div class="text-center">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" width="150px">
+        <h1>Log In</h1>
+      </div>
+    </div>
+    <div class="row">
+      <form action="{{ url_for('login') }}" method="post">
+        <div class="form-group">
+          <label name="username">Username</label>
+          <input type="text" class="form-control" name="username">
+        </div>
+        <div class="form-group">
+          <label name="password">Password</label>
+          <input type="password" class="form-control" name="password">
+        </div>
+        <input type="submit" value="Login" class="btn btn-primary btn-block">
+      </form>
+    </div>
+  </div>
+
+{% endblock %}

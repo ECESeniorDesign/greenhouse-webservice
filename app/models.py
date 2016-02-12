@@ -1,5 +1,6 @@
 import datetime
 import urllib2
+import requests
 import json
 from config import PLANT_DATABASE, NUMBER_OF_PLANTS
 import lazy_record
@@ -182,3 +183,16 @@ class Token(lazy_record.Base):
     __attributes__ = {
         "token": str,
     }
+
+    @classmethod
+    def get(Token, **kwargs):
+        try:
+            response = requests.post("http://{}/api/token".format(
+                                        PLANT_DATABASE),
+                                    json={'user': kwargs})
+            if response.ok:
+                token = json.loads(response.text).get('token')
+                Token.create(token=token)
+            return response.ok
+        except requests.exceptions.ConnectionError:
+            raise PlantDatabase.CannotConnect(PLANT_DATABASE)

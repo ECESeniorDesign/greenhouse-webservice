@@ -422,6 +422,61 @@ class TestPlantSettingsController(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         flash.assert_called_with("Settings could not be updated", 'error')
 
+class TestSessions(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    def test_get_return_code(self):
+        response = self.app.get("/login")
+        self.assertEqual(response.status_code, 200)
+
+    @mock.patch("app.webservice.flask.render_template")
+    def test_renders_login_page(self, render_template):
+        response = self.app.get("/login")
+        render_template.assert_called_with("sessions/new.html")
+
+    @mock.patch("app.webservice.models")
+    def test_post_requests_token(self, models):
+        response = self.app.post("/login",
+                                 data={'username': 'chaseconklin',
+                                       'password':'mysupersecretpassword'})
+        models.Token.get.assert_called_with(username='chaseconklin',
+                                            password='mysupersecretpassword')
+
+    @mock.patch("app.webservice.models")
+    def test_redirects_to_home_on_success(self, models):
+        models.Token.get.return_value = True
+        response = self.app.post("/login",
+                                 data={'username': 'chaseconklin',
+                                       'password':'mysupersecretpassword'})
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'],
+                         'http://localhost/plants')
+
+    @mock.patch("app.webservice.models")
+    def test_renders_login_on_failure_a(self, models):
+        models.Token.get.return_value = False
+        response = self.app.post("/login",
+                                 data={'username': 'chaseconklin',
+                                       'password':'mysupersecretpassword'})
+        self.assertEqual(response.status_code, 200)
+
+    @mock.patch("app.webservice.flask.render_template")
+    @mock.patch("app.webservice.models")
+    def test_renders_login_on_failure_b(self, models, render_template):
+        models.Token.get.return_value = False
+        response = self.app.post("/login",
+                                 data={'username': 'chaseconklin',
+                                       'password':'mysupersecretpassword'})
+        render_template.assert_called_with("sessions/new.html")
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",

@@ -1,4 +1,5 @@
 import datetime
+import models
 
 class NotificationPolicy(object):
 
@@ -46,3 +47,18 @@ class NotificationPolicy(object):
                all(p.sensor_value > high_threshold or
                    p.sensor_value < low_threshold for
                    p in self.relevant_points())
+
+class TokenRefreshPolicy(object):
+
+    def _token_older_than(self, if_none=False, **kwargs):
+        if models.Token.last():
+            return (models.Token.last().created_at + \
+                    datetime.timedelta(**kwargs)) < datetime.datetime.today()
+        else:
+            return if_none
+
+    def requires_refresh(self):
+        return self._token_older_than(hours=12, if_none=False)
+
+    def requires_authentication(self):
+        return self._token_older_than(days=1, if_none=True)

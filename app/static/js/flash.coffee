@@ -1,8 +1,8 @@
 hide_flash = ->
-  $('.alert').slideUp()
+  $('.flash').slideUp()
   return
 
 $(document).ready ->
-  if $('.alert').size()
+  if $('.flash').size()
     setTimeout hide_flash, 3000
   return
