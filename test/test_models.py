@@ -327,6 +327,15 @@ class TestToken(unittest.TestCase):
                                 json={'user': {'username': 'chaseconklin',
                                                'password': 'mypassword'}})
 
+    def test_makes_request_to_plant_database_with_token(self, post):
+        post.return_value = mock.Mock(ok=True, status_code=200,
+                                      text='{"token":"g3QAAAACZAAEZGF0YWEBZAA'
+                                           'Gc2lnbmVkbgYAdyhV01IB--4XapswheNb'
+                                           'ceQfCSoSrQRTbUJ2c="}')
+        models.Token.get(token="mytoken")
+        post.assert_called_with("http://PLANT_DATABASE/api/token",
+                                json={'token': 'mytoken'})
+
     def test_raises_cannot_connect_if_cannot_connect(self, post):
         post.side_effect = models.requests.exceptions.ConnectionError
         with self.assertRaises(models.PlantDatabase.CannotConnect):
@@ -357,6 +366,12 @@ class TestToken(unittest.TestCase):
                                                     "Gc2lnbmVkbgYAdyhV01IB--"
                                                     "4XapswheNbceQfCSoSrQRTb"
                                                     "UJ2c=")
+
+    @mock.patch("app.models.Token.get")
+    def test_refresh_calls_get_with_last_token(self, get, _post):
+        models.Token.create(token="mytoken")
+        models.Token.refresh()
+        get.assert_called_with(token="mytoken")
 
 def plant_fixture():
     return models.Plant(name="testPlant",

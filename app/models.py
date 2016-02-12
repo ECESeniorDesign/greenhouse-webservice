@@ -185,14 +185,22 @@ class Token(lazy_record.Base):
     }
 
     @classmethod
-    def get(Token, **kwargs):
+    def get(Token, token=None, **kwargs):
+        if token:
+            args = {'token': token}
+        else:
+            args = {'user': kwargs}
         try:
             response = requests.post("http://{}/api/token".format(
                                         PLANT_DATABASE),
-                                    json={'user': kwargs})
+                                    json=args)
             if response.ok:
                 token = json.loads(response.text).get('token')
                 Token.create(token=token)
             return response.ok
         except requests.exceptions.ConnectionError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
+
+    @classmethod
+    def refresh(Token):
+        Token.get(token=Token.last().token)

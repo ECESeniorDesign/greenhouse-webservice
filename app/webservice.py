@@ -10,6 +10,7 @@ import os
 import presenters
 import policies
 import services
+import datetime
 from task_runner import BackgroundTaskRunner
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -343,10 +344,21 @@ def create_sensor_data(): # pragma: no cover
                 plant.record_sensor("temperature", temperature[index])
 
 @background.task
-def notify_plant_condition(): # pragme: no cover
+def notify_plant_condition(): # pragma: no cover
     for nt in models.NotificationThreshold.all():
         if policies.NotificationPolicy(nt).should_notify():
             services.Notifier(nt).notify()
+
+@background.task
+def refresh_token(): # pragma: no cover
+    if policies.TokenRefreshPolicy().requires_refresh():
+        models.Token.refresh()
+
+@background.task
+def destroy_old_tokens(): # pragma: no cover
+    for token in models.Token.where("created_at < ?",
+                    datetime.datetime.today() - datetime.timedelta(days=1)):
+        token.destroy()
 
 def run(): # pragma: no cover
     background.run()
