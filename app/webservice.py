@@ -51,7 +51,14 @@ class PlantsController(object):
     def index():
         plants = [(models.Plant.for_slot(slot_id, False), slot_id)
                   for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
-        return flask.render_template("plants/index.html", plants=plants)
+        water_level = models.WaterLevel.last()
+        if water_level:
+            water = water_level.level
+        else:
+            water = 0
+        return flask.render_template("plants/index.html",
+                                     plants=plants,
+                                     water=water)
 
     @staticmethod
     def new():
@@ -324,6 +331,7 @@ def create_sensor_data(): # pragma: no cover
         pH = [8.1] * config.NUMBER_OF_PLANTS
         humidity = [0.67] * config.NUMBER_OF_PLANTS
         temperature = [87.1] * config.NUMBER_OF_PLANTS
+        models.WaterLevel.create(level=52)
         for i in range(config.NUMBER_OF_PLANTS):
             sun[i] += random.randint(-5, 5)
             sun[i] = min(max(sun[i], 0), 100)

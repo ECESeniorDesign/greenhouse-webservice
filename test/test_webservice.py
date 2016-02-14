@@ -25,10 +25,19 @@ class TestPlantsController(unittest.TestCase):
         self.assertEqual(result.status_code, 200)
 
     @mock.patch("app.webservice.flask.render_template")
-    def test_renders_home_page_with_plants(self, render_template):
+    def test_renders_home_page_with_plants_and_water(self, render_template):
         self.app.get('/')
         render_template.assert_called_with("plants/index.html",
-                                           plants=[(None, 1), (None, 2)])
+                                           plants=[(None, 1), (None, 2)],
+                                           water=0)
+
+    @mock.patch("app.webservice.flask.render_template")
+    def test_renders_home_page_with_plants_with_water(self, render_template):
+        webservice.models.WaterLevel.create(level=85)
+        self.app.get('/')
+        render_template.assert_called_with("plants/index.html",
+                                           plants=[(None, 1), (None, 2)],
+                                           water=85)
 
     def test_plants_index_status_code(self):
         result = self.app.get('/plants')
@@ -38,7 +47,8 @@ class TestPlantsController(unittest.TestCase):
     def test_renders_plants_index_with_plants(self, render_template):
         self.app.get('/plants')
         render_template.assert_called_with("plants/index.html",
-                                           plants=[(None, 1), (None, 2)])
+                                           plants=[(None, 1), (None, 2)],
+                                           water=0)
     
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_plants_new_status_code(self, PlantDatabase):

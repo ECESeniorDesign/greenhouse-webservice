@@ -204,3 +204,9 @@ class Token(lazy_record.Base):
     @classmethod
     def refresh(Token):
         Token.get(token=Token.last().token)
+
+
+class WaterLevel(lazy_record.Base):
+    __attributes__ = {
+        "level": int,
+    }

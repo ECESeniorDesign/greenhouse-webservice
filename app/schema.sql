@@ -57,3 +57,11 @@ create table tokens (
   created_at timestamp not null,
   updated_at timestamp not null
 );
+
+drop table if exists water_levels;
+create table water_levels (
+  id integer primary key autoincrement,
+  level integer not null,
+  created_at timestamp not null,
+  updated_at timestamp not null
+);
