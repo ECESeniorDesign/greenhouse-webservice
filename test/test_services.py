@@ -9,7 +9,7 @@ from app.config import PLANT_DATABASE
 
 @mock.patch("app.models.Token")
 @mock.patch("app.services.requests.post")
-class TestNotifier(unittest.TestCase):
+class TestPlantNotifier(unittest.TestCase):
 
     def setUp(self):
         plant = mock.Mock(name="plant")
@@ -19,7 +19,7 @@ class TestNotifier(unittest.TestCase):
             plant=plant,
             save=mock.Mock(),
             triggered_at=dt(2011, 01, 1))
-        self.notifier = services.Notifier(self.notification_threshold)
+        self.notifier = services.PlantNotifier(self.notification_threshold)
 
     @mock.patch("app.services.datetime.datetime")
     def test_sets_triggered_at_on_threshold(self, datetime, post, Token):

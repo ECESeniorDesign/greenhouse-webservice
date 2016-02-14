@@ -355,7 +355,7 @@ def create_sensor_data(): # pragma: no cover
 def notify_plant_condition(): # pragma: no cover
     for nt in models.NotificationThreshold.all():
         if policies.NotificationPolicy(nt).should_notify():
-            services.Notifier(nt).notify()
+            services.PlantNotifier(nt).notify()
 
 @background.task
 def refresh_token(): # pragma: no cover
