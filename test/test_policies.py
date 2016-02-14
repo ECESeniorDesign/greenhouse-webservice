@@ -137,6 +137,23 @@ class TestTokenRefreshPolicy(unittest.TestCase):
         self.assertTrue(policies.TokenRefreshPolicy().requires_authentication())
 
 
+class TestWaterNotificationPolicy(unittest.TestCase):
+
+    def test_notification_required_when_water_level_low(self):
+        water_level = mock.Mock(name="WaterLevel", level=12)
+        self.assertTrue(policies.WaterNotificationPolicy(water_level
+                               ).should_notify())
+
+    def test_notification_not_required_when_water_level_high(self):
+        water_level = mock.Mock(name="WaterLevel", level=87)
+        self.assertFalse(policies.WaterNotificationPolicy(water_level
+                               ).should_notify())
+
+    def test_notification_not_required_when_no_water(self):
+        self.assertFalse(policies.WaterNotificationPolicy(None
+                               ).should_notify())
+
+
 def sensor_data_points():
     return mock.Mock(name="lazy_record.Query")
 

@@ -62,3 +62,14 @@ class TokenRefreshPolicy(object):
 
     def requires_authentication(self):
         return self._token_older_than(days=1, if_none=True)
+
+class WaterNotificationPolicy(object):
+
+    def __init__(self, water_level):
+        self.water_level = water_level
+
+    def should_notify(self):
+        if self.water_level:
+            return self.water_level.level < 15
+        else:
+            return False
