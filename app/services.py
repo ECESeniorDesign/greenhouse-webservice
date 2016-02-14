@@ -8,7 +8,7 @@ class Notifier(object):
     class InvalidCredentials(object):
         pass
 
-    def __init__(self, data, callback):
+    def __init__(self, data, callback=lambda: None):
         self.data = dict(data)
         self.callback = callback
 
@@ -32,3 +32,9 @@ def PlantNotifier(threshold):
                      'message': ('Check up on your {} to ensure that '
                                 'it is alright!').format(threshold.plant.name)
                      }, callback)
+
+def WaterLevelNotifier(level):
+    return Notifier({
+        'title': "Water Level Low!",
+        'message': "Please fill the greenhouse's water tank, it has only 12% remaining"
+    })

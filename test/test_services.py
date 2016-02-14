@@ -59,5 +59,28 @@ class TestPlantNotifier(unittest.TestCase):
                          services.Notifier.InvalidCredentials)
 
 
+@mock.patch("app.models.Token")
+@mock.patch("app.services.requests.post")
+class TestWaterLevelNotifier(unittest.TestCase):
+
+    def setUp(self):
+        self.notifier = services.WaterLevelNotifier(12)
+
+    def test_sends_notification(self, post, Token):
+        self.notifier.notify()
+        token = Token.last.return_value.token
+        post.assert_called_with(
+            "http://{}/api/notify".format(PLANT_DATABASE),
+            data={'title': 'Water Level Low!',
+                  'message': 'Please fill the greenhouse\'s water tank, it has only 12% remaining',
+                  'token': token}
+        )
+
+    def test_returns_if_invalid_credentials(self, post, Token):
+        post.return_value = mock.Mock(ok=False, status_code=403)
+        self.assertEqual(self.notifier.notify(),
+                         services.Notifier.InvalidCredentials)
+
+
 if __name__ == '__main__':
     unittest.main()
