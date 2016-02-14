@@ -358,6 +358,13 @@ def notify_plant_condition(): # pragma: no cover
             services.PlantNotifier(nt).notify()
 
 @background.task
+def notify_water_level(): # pragma: no cover
+    water_level = models.WaterLevel.last()
+    if policies.WaterNotificationPolicy(water_level).should_notify():
+        # Implicit: water_level exists if the policy returns true
+        services.WaterLevelNotifier(water_level.level).notify()
+
+@background.task
 def refresh_token(): # pragma: no cover
     if policies.TokenRefreshPolicy().requires_refresh():
         models.Token.refresh()
