@@ -28,4 +28,7 @@ def PlantNotifier(threshold):
     def callback():
         threshold.triggered_at = datetime.datetime.now()
         threshold.save()
-    return Notifier({'plant_name': threshold.plant.name}, callback)
+    return Notifier({'title': '"{}" needs attention!'.format(threshold.plant.name),
+                     'message': ('Check up on your {} to ensure that '
+                                'it is alright!').format(threshold.plant.name)
+                     }, callback)

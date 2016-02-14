@@ -34,7 +34,9 @@ class TestPlantNotifier(unittest.TestCase):
         token = Token.last.return_value.token
         post.assert_called_with(
             "http://{}/api/notify".format(PLANT_DATABASE),
-            data={'plant_name': 'Hydrangea', 'token': token}
+            data={'title': '"Hydrangea" needs attention!',
+                  'message': 'Check up on your Hydrangea to ensure that it is alright!',
+                  'token': token}
         )
 
     def test_does_not_set_triggered_if_notification_isnt_sent(self, post, Token):
