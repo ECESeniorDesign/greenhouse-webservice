@@ -243,6 +243,7 @@ def login():
                         password=form.get("password", "")):
         return flask.redirect(flask.url_for('PlantsController.index'))
     else:
+        flask.flash("Invalid Credentials", "error")
         return flask.render_template("sessions/new.html")
 
 router.root(PlantsController, "index")

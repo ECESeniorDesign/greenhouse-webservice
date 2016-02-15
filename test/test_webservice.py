@@ -477,13 +477,15 @@ class TestSessions(unittest.TestCase):
                                        'password':'mysupersecretpassword'})
         self.assertEqual(response.status_code, 200)
 
+    @mock.patch("app.webservice.flask.flash")
     @mock.patch("app.webservice.flask.render_template")
     @mock.patch("app.webservice.models")
-    def test_renders_login_on_failure_b(self, models, render_template):
+    def test_renders_login_on_failure_b(self, models, render_template, flash):
         models.Token.get.return_value = False
         response = self.app.post("/login",
                                  data={'username': 'chaseconklin',
                                        'password':'mysupersecretpassword'})
+        flash.assert_called_with("Invalid Credentials", "error")
         render_template.assert_called_with("sessions/new.html")
 
 
