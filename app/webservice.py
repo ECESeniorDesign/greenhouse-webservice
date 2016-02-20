@@ -62,7 +62,8 @@ class PlantsController(object):
 
     @staticmethod
     def new():
-        plants = models.PlantDatabase.all_plants()
+        current_plants = list(models.Plant.all())
+        plants = models.PlantDatabase.compatible_plants(current_plants)
         slot_id = int(flask.request.args.get("slot_id"))
         return flask.render_template("plants/new.html",
                                      plants=plants,

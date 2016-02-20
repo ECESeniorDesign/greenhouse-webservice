@@ -178,6 +178,19 @@ class PlantDatabase(object):
         except urllib2.URLError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
 
+    @classmethod
+    def compatible_plants(PlantDatabase, plants):
+        try:
+            args = {"ids": [plant.plant_database_id for plant in plants]}
+            response = requests.post("http://{}/api/plants/compatible".format(
+                                        PLANT_DATABASE),
+                                    json=args)
+            plant_list = json.load(response)
+            plants = [Plant.from_json(plant) for plant in plant_list]
+            return plants
+        except requests.exceptions.ConnectionError:
+            raise PlantDatabase.CannotConnect(PLANT_DATABASE)
+
 
 class Token(lazy_record.Base):
     __attributes__ = {

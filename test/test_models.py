@@ -230,6 +230,30 @@ class TestPlantDatabase(unittest.TestCase):
         with self.assertRaises(models.PlantDatabase.CannotConnect):
             models.PlantDatabase.find_plant(1)
 
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.json")
+    @mock.patch("app.models.requests.post")
+    @mock.patch("app.models.Plant.from_json")
+    def test_comp_plants_in_plant_database(self, from_json, post, json):
+        response = mock.Mock(name="response")
+        json_response = {'json': 'response'}
+        plant = mock.Mock(name="plant", plant_database_id=1)
+        post.return_value = response
+        json.load.return_value = [json_response]
+        from_json.return_value = plant
+        self.assertEqual(models.PlantDatabase.compatible_plants([plant]), [plant])
+        post.assert_called_with(
+            "http://PLANT_DATABASE/api/plants/compatible", json={"ids": [1]})
+        from_json.assert_called_with(json_response)
+        json.load.assert_called_with(response)
+
+    @mock.patch("app.models.requests.post")
+    def test_comp_raises_cannot_connect_if_cannot_connect(self, post):
+        post.side_effect = models.requests.exceptions.ConnectionError
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.PlantDatabase.compatible_plants(
+                [mock.Mock(name="plant", plant_database_id=1)])
+
 
 class TestSensorDataPoint(unittest.TestCase):
 
