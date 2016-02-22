@@ -69,7 +69,7 @@ class TestPlant(unittest.TestCase):
     @mock.patch("app.models.datetime.datetime")
     def test_loads_from_json(self, datetime):
         datetime.today.return_value = dt(2016, 1, 1)
-        json_plant = models.Plant.from_json(self.plant_json())
+        json_plant = models.Plant.from_json(plant_json())
         self.assertEqual(json_plant.water_tolerance, 30.0)
         self.assertEqual(json_plant.water_ideal, 57.0)
         self.assertEqual(json_plant.photo_url, "testPlant.png")
@@ -147,25 +147,6 @@ class TestPlant(unittest.TestCase):
         plant.record_sensor("light", 17.6)
         self.assertEqual(plant.light, 17.6)
 
-    def plant_json(self):
-        return {
-                   "water_tolerance": 30.0,
-                   "water_ideal": 57.0,
-                   "updated_at": "2016-01-19T04:28:24Z",
-                   "photo_url": "testPlant.png",
-                   "name": "testPlant",
-                   "maturity": 9,
-                   "light_tolerance": 10.0,
-                   "light_ideal": 50.0,
-                   "inserted_at": "2016-01-19T04:28:24Z",
-                   "id": 1,
-                   "humidity_tolerance": 0.01,
-                   "humidity_ideal": 0.2,
-                   "acidity_tolerance": 1.0,
-                   "acidity_ideal": 9.0
-               }
-
-
 class TestPlantDatabase(unittest.TestCase):
 
     @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
@@ -174,14 +155,16 @@ class TestPlantDatabase(unittest.TestCase):
     @mock.patch("app.models.Plant.from_json")
     def test_lists_plants_in_plant_database(self, from_json, urllib2, json):
         response = mock.Mock(name="response")
-        json_response = {'json': 'response'}
+        json_response = plant_json()
+        json_response["id"] = json_response["plant_database_id"]
+        del json_response["plant_database_id"]
         plant = mock.Mock(name="plant")
         urllib2.urlopen.return_value = response
         json.load.return_value = [json_response]
         from_json.return_value = plant
         self.assertEqual(models.PlantDatabase.all_plants(), [plant])
         urllib2.urlopen.assert_called_with("http://PLANT_DATABASE/api/plants")
-        from_json.assert_called_with(json_response)
+        from_json.assert_called_with(plant_json())
         json.load.assert_called_with(response)
 
     @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
@@ -198,7 +181,9 @@ class TestPlantDatabase(unittest.TestCase):
     @mock.patch("app.models.Plant.from_json")
     def test_finds_plant_in_plant_database(self, from_json, urllib2, json):
         response = mock.Mock(name="response")
-        json_response = {'json': 'response'}
+        json_response = plant_json()
+        json_response["id"] = json_response["plant_database_id"]
+        del json_response["plant_database_id"]
         plant = mock.Mock(name="plant")
         urllib2.urlopen.return_value = response
         json.load.return_value = json_response
@@ -206,7 +191,7 @@ class TestPlantDatabase(unittest.TestCase):
         self.assertEqual(models.PlantDatabase.find_plant(1), plant)
         urllib2.urlopen.assert_called_with(
             "http://PLANT_DATABASE/api/plants/1")
-        from_json.assert_called_with(json_response)
+        from_json.assert_called_with(plant_json())
         json.load.assert_called_with(response)
 
     @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
@@ -236,7 +221,9 @@ class TestPlantDatabase(unittest.TestCase):
     @mock.patch("app.models.Plant.from_json")
     def test_comp_plants_in_plant_database(self, from_json, post, json):
         response = mock.Mock(name="response")
-        json_response = {'json': 'response'}
+        json_response = plant_json()
+        json_response["id"] = json_response["plant_database_id"]
+        del json_response["plant_database_id"]
         plant = mock.Mock(name="plant", plant_database_id=1)
         post.return_value = response
         json.load.return_value = [json_response]
@@ -244,7 +231,7 @@ class TestPlantDatabase(unittest.TestCase):
         self.assertEqual(models.PlantDatabase.compatible_plants([plant]), [plant])
         post.assert_called_with(
             "http://PLANT_DATABASE/api/plants/compatible", json={"ids": [1]})
-        from_json.assert_called_with(json_response)
+        from_json.assert_called_with(plant_json())
         json.load.assert_called_with(response)
 
     @mock.patch("app.models.requests.post")
@@ -253,6 +240,48 @@ class TestPlantDatabase(unittest.TestCase):
         with self.assertRaises(models.PlantDatabase.CannotConnect):
             models.PlantDatabase.compatible_plants(
                 [mock.Mock(name="plant", plant_database_id=1)])
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.json")
+    @mock.patch("app.models.urllib2")
+    def test_gets_plant_params(self, urllib2, json):
+        response = mock.Mock(name="response")
+        json_response = {'id': 5, 'inserted_at': 11, 'updated_at': 11,
+                         'name': "Foo", "maturity": 17}
+        expected = {'name': "Foo", "maturity": 17, 'plant_database_id': 5}
+        plant = mock.Mock(name="plant")
+        urllib2.urlopen.return_value = response
+        json.load.return_value = json_response
+        self.assertEqual(models.PlantDatabase.plant_params(1), expected)
+        urllib2.urlopen.assert_called_with(
+            "http://PLANT_DATABASE/api/plants/1")
+        json.load.assert_called_with(response)
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.json")
+    @mock.patch("app.models.urllib2")
+    def test_filters_plant_params(self, urllib2, json):
+        response = mock.Mock(name="response")
+        json_response = {'id': 5, 'inserted_at': 11, 'updated_at': 11,
+                         'name': "Foo", "maturity": 17}
+        expected = {'name': "Foo", 'plant_database_id': 5}
+        plant = mock.Mock(name="plant")
+        urllib2.urlopen.return_value = response
+        json.load.return_value = json_response
+        self.assertEqual(
+            models.PlantDatabase.plant_params(1, filter=["maturity"]),
+            expected)
+        urllib2.urlopen.assert_called_with(
+            "http://PLANT_DATABASE/api/plants/1")
+        json.load.assert_called_with(response)
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.urllib2.urlopen")
+    def test_params_raises_if_cannot_connect_to_plant_database(self, urlopen):
+        urlopen.side_effect = models.urllib2.URLError(
+            "[Errno 61] Connection refused")
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.PlantDatabase.plant_params(1)
 
 
 class TestSensorDataPoint(unittest.TestCase):
@@ -396,6 +425,23 @@ class TestToken(unittest.TestCase):
         models.Token.create(token="mytoken")
         models.Token.refresh()
         get.assert_called_with(token="mytoken")
+
+def plant_json():
+    return {
+               "water_tolerance": 30.0,
+               "water_ideal": 57.0,
+               "photo_url": "testPlant.png",
+               "name": "testPlant",
+               "maturity": 9,
+               "light_tolerance": 10.0,
+               "light_ideal": 50.0,
+               "plant_database_id": 1,
+               "humidity_tolerance": 0.01,
+               "humidity_ideal": 0.2,
+               "acidity_tolerance": 1.0,
+               "acidity_ideal": 9.0
+           }
+
 
 def plant_fixture():
     return models.Plant(name="testPlant",

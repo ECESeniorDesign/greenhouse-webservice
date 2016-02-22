@@ -76,12 +76,7 @@ class Plant(lazy_record.Base):
 
     @classmethod
     def from_json(Plant, json_object):
-        plant_database_id = json_object["id"]
-        del json_object["id"]
-        del json_object["inserted_at"]
-        del json_object["updated_at"]
         plant = Plant(**json_object)
-        plant.plant_database_id = plant_database_id
         plant.mature_on = datetime.datetime.today() + datetime.timedelta(
             json_object["maturity"])
         return plant
@@ -155,28 +150,40 @@ class PlantDatabase(object):
         pass
 
     @classmethod
-    def all_plants(PlantDatabase):
+    def _filter_params(PlantDatabase, params, filter=[]):
+        params = dict(params)
+        params["plant_database_id"] = params["id"]
+        filter += ["id", "inserted_at", "updated_at"]
+        return { k : v for k, v in params.items()
+                 if k not in filter }
+
+    @classmethod
+    def _get_response(PlantDatabase, url):
         try:
-            response = urllib2.urlopen("http://{}/api/plants".format(
-                PLANT_DATABASE))
-            plant_list = json.load(response)
-            plants = [Plant.from_json(plant) for plant in plant_list]
-            return plants
+            response = urllib2.urlopen("http://{}/api/{}".format(
+                PLANT_DATABASE, url))
+            return json.load(response)
         except urllib2.URLError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
 
     @classmethod
+    def _process_list(PlantDatabase, plant_list):
+        plant_args = (PlantDatabase._filter_params(params)
+                      for params in plant_list)
+        return [Plant.from_json(params) for params in plant_args]
+
+    @classmethod
+    def all_plants(PlantDatabase):
+        response = PlantDatabase._get_response("plants")
+        return PlantDatabase._process_list(response)
+
+    @classmethod
     def find_plant(PlantDatabase, id):
-        try:
-            response = urllib2.urlopen("http://{}/api/plants/{}".format(
-                PLANT_DATABASE, id))
-            plant = json.load(response)
-            if plant:
-                return Plant.from_json(plant)
-            else:
-                return None
-        except urllib2.URLError:
-            raise PlantDatabase.CannotConnect(PLANT_DATABASE)
+        plant_params = PlantDatabase.plant_params(id)
+        if plant_params:
+            return Plant.from_json(plant_params)
+        else:
+            return None
 
     @classmethod
     def compatible_plants(PlantDatabase, plants):
@@ -186,10 +193,17 @@ class PlantDatabase(object):
                                         PLANT_DATABASE),
                                     json=args)
             plant_list = json.load(response)
-            plants = [Plant.from_json(plant) for plant in plant_list]
-            return plants
+            return PlantDatabase._process_list(plant_list)
         except requests.exceptions.ConnectionError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
+
+    @classmethod
+    def plant_params(PlantDatabase, id, filter=[]):
+        response = PlantDatabase._get_response("plants/{}".format(id))
+        if response:
+            return PlantDatabase._filter_params(response, filter)
+        else:
+            return None
 
 
 class Token(lazy_record.Base):
