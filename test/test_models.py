@@ -226,13 +226,13 @@ class TestPlantDatabase(unittest.TestCase):
         del json_response["plant_database_id"]
         plant = mock.Mock(name="plant", plant_database_id=1)
         post.return_value = response
-        json.load.return_value = [json_response]
+        json.loads.return_value = [json_response]
         from_json.return_value = plant
         self.assertEqual(models.PlantDatabase.compatible_plants([plant]), [plant])
         post.assert_called_with(
             "http://PLANT_DATABASE/api/plants/compatible", json={"ids": [1]})
         from_json.assert_called_with(plant_json())
-        json.load.assert_called_with(response)
+        json.loads.assert_called_with(response.content)
 
     @mock.patch("app.models.requests.post")
     def test_comp_raises_cannot_connect_if_cannot_connect(self, post):

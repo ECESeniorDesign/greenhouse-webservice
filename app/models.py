@@ -192,7 +192,7 @@ class PlantDatabase(object):
             response = requests.post("http://{}/api/plants/compatible".format(
                                         PLANT_DATABASE),
                                     json=args)
-            plant_list = json.load(response)
+            plant_list = json.loads(response.content)
             return PlantDatabase._process_list(plant_list)
         except requests.exceptions.ConnectionError:
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
