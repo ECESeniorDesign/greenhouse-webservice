@@ -53,7 +53,7 @@ class TestPlantsController(unittest.TestCase):
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_plants_new_status_code(self, PlantDatabase):
         plant = mock.Mock(name="plant")
-        PlantDatabase.all_plants.return_value = [plant]
+        PlantDatabase.compatible_plants.return_value = [plant]
         result = self.app.get('/plants/new?slot_id=2')
         self.assertEqual(result.status_code, 200)
 
@@ -62,13 +62,13 @@ class TestPlantsController(unittest.TestCase):
     def test_renders_plants_new_with_plants(self, render_template,
                                             PlantDatabase):
         plant = mock.Mock(name="plant")
-        PlantDatabase.all_plants.return_value = [plant]
+        PlantDatabase.compatible_plants.return_value = [plant]
         self.app.get('/plants/new?slot_id=2')
         render_template.assert_called_with("plants/new.html",
                                            plants=[plant],
                                            slot_id=2)
 
-    @mock.patch("app.webservice.models.PlantDatabase.all_plants")
+    @mock.patch("app.webservice.models.PlantDatabase.compatible_plants")
     def test_plants_new_redirects_on_connection_failure(self, all_plants):
         all_plants.side_effect = webservice.models.PlantDatabase.CannotConnect
         result = self.app.get("/plants/new?slot_id=1")

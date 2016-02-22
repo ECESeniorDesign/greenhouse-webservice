@@ -6,6 +6,7 @@ from datetime import datetime as dt
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.services as services
 from app.config import PLANT_DATABASE
+import app.models as models
 
 @mock.patch("app.models.Token")
 @mock.patch("app.services.requests.post")
@@ -80,6 +81,43 @@ class TestWaterLevelNotifier(unittest.TestCase):
         post.return_value = mock.Mock(ok=False, status_code=403)
         self.assertEqual(self.notifier.notify(),
                          services.Notifier.InvalidCredentials)
+
+
+@mock.patch("app.models.PlantDatabase.plant_params")
+class TestPlantUpdater(unittest.TestCase):
+
+    def setUp(self):
+        self.plant = mock.Mock(name="plant", plant_database_id=11)
+        self.updater = services.PlantUpdater(self.plant)
+
+    def test_gets_plant_data(self, plant_params):
+        self.updater.update()
+        plant_params.assert_called_with(11, filter=["maturity"])
+
+    def test_returns_false_if_cannot_connect(self, plant_params):
+        plant_params.side_effect = models.PlantDatabase.CannotConnect("PLANT_DATABASE")
+        self.assertEqual(self.updater.update(), False)
+
+    def test_updates_plant_with_data(self, plant_params):
+        plant_data = {
+            "water_tolerance": 30.0,
+            "water_ideal": 57.0,
+            "photo_url": "testPlant.png",
+            "name": "testPlant",
+            "light_tolerance": 10.0,
+            "light_ideal": 50.0,
+            "plant_database_id": 1,
+            "humidity_tolerance": 0.01,
+            "humidity_ideal": 0.2,
+            "acidity_tolerance": 1.0,
+            "acidity_ideal": 9.0
+        }
+        plant_params.return_value = plant_data
+        self.updater.update()
+        self.plant.update.assert_called_with(**plant_data)
+
+    def test_returns_true_on_success(self, plant_params):
+        self.assertEqual(self.updater.update(), True)
 
 
 if __name__ == '__main__':
