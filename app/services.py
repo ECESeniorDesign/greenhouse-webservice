@@ -38,3 +38,18 @@ def WaterLevelNotifier(level):
         'title': "Water Level Low!",
         'message': "Please fill the greenhouse's water tank, it has only 12% remaining"
     })
+
+class PlantUpdater(object):
+
+    def __init__(self, plant):
+        self.plant = plant
+
+    def update(self):
+        try:
+            plant_data = models.PlantDatabase.plant_params(
+                self.plant.plant_database_id,
+                filter=['maturity'])
+            self.plant.update(**plant_data)
+            return True
+        except:
+            return False

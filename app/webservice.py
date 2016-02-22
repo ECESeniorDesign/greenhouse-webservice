@@ -41,6 +41,7 @@ socketio = SocketIO(app, async_mode='eventlet')
 app.secret_key = config.SECRET_KEY
 router = router.Router(app)
 background = BackgroundTaskRunner(refresh=10)
+daily = BackgroundTaskRunner(refresh=24 * 3600)
 
 # Routing & Controllers
 
@@ -377,6 +378,12 @@ def destroy_old_tokens(): # pragma: no cover
                     datetime.datetime.today() - datetime.timedelta(days=1)):
         token.destroy()
 
+@daily.task
+def updated_plants(): # pragma: no cover
+    for plant in models.Plant.all():
+        services.PlantUpdater(plant).update()
+
 def run(): # pragma: no cover
     background.run()
+    daily.run()
     socketio.run(app, debug=config.DEBUG)
