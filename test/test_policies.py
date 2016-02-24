@@ -154,6 +154,63 @@ class TestWaterNotificationPolicy(unittest.TestCase):
                                ).should_notify())
 
 
+class TestIdealConditions(unittest.TestCase):
+
+    def setUp(self):
+        self.plant1 = plant()
+        self.plant2 = plant()
+        self.plant2.water_ideal = 72.0
+        self.plant2.water_tolerance = 20.0
+        self.conditions = policies.IdealConditions(self.plant1, self.plant2)
+
+    def test_picks_ideal_as_weighted_average(self):
+        self.assertEqual(self.conditions.ideal("water"), 66.0)
+
+    def test_picks_ideal_with_disparate_plant_conditions(self):
+        self.plant2.water_ideal = 185.0
+        self.plant2.water_tolerance = 140.0
+        self.assertEqual(self.conditions.ideal("water"), 79.59)
+
+    def test_picks_ideal_with_tight_tolerances(self):
+        self.plant2.water_ideal = 185.0
+        self.plant2.water_tolerance = 128.5
+        self.plant1.water_tolerance = 0.5
+        self.assertEqual(self.conditions.ideal("water"), 57.5)
+
+    def test_picks_padded_upper_if_possible(self):
+        self.assertEqual(self.conditions.max("water"), 79.5)
+
+    def test_uses_standard_upper_if_padding_fails(self):
+        self.plant2.water_tolerance = 5.0
+        self.plant2.water_ideal = 86.0
+        self.assertEqual(self.conditions.max("water"), 87.0)
+
+    def test_picks_padded_lower_if_possible(self):
+        self.assertEqual(self.conditions.min("water"), 57.0)
+
+    def test_uses_standard_lower_if_padding_fails(self):
+        self.plant2.water_tolerance = 7.0
+        self.plant2.water_ideal = 23.0
+        self.assertEqual(self.conditions.min("water"), 27.0)
+
+    def test_uses_default_window_if_cannot_pad(self):
+        self.plant2.water_tolerance = 7.0
+        self.plant2.water_ideal = 23.0
+        self.assertEqual(self.conditions.min("water"), 27.0)
+        self.assertEqual(self.conditions.max("water"), 30.0)
+        assert self.conditions.min("water") < self.conditions.ideal("water")
+        assert self.conditions.ideal("water") < self.conditions.max("water")
+
+    def test_picks_ideal_for_light(self):
+        self.assertEqual(self.conditions.ideal("light"), 50.0)
+
+    def test_picks_min_for_light(self):
+        self.assertEqual(self.conditions.min("light"), 42.5)
+
+    def test_picks_max_for_light(self):
+        self.assertEqual(self.conditions.max("light"), 57.5)
+
+
 def sensor_data_points():
     return mock.Mock(name="lazy_record.Query")
 

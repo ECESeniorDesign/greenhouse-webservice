@@ -73,3 +73,73 @@ class WaterNotificationPolicy(object):
             return self.water_level.level < 15
         else:
             return False
+
+class IdealConditions(object):
+
+    def __init__(self, *plants):
+        self.plants = plants
+
+    def ideal(self, metric):
+        """Returns the ideal +metric+ value for the plants"""
+        weighted_sum = sum(self._ideal_value(plant, metric) / \
+                           self._tolerance_value(plant, metric)
+                           for plant in self.plants)
+        weights = sum(1./self._tolerance_value(plant, metric)
+                      for plant in self.plants)
+        return round(weighted_sum / weights, 2)
+
+    def max(self, metric):
+        """Returns the max +metric+ value for the plants"""
+        if self._cannot_pad(metric):
+            return self._absolute_max(metric)
+        else:
+            return self._padded_max(metric)
+
+    def min(self, metric):
+        """Returns the min +metric+ value for the plants"""
+        if self._cannot_pad(metric):
+            return self._absolute_min(metric)
+        else:
+            return self._padded_min(metric)
+
+    # Private methods
+
+    def _ideal_value(self, plant, metric):
+        return getattr(plant, metric + "_ideal")
+
+    def _tolerance_value(self, plant, metric):
+        return getattr(plant, metric + "_tolerance")
+
+    def _absolute_min(self, metric):
+        return max(self._ideal_value(plant, metric) - \
+                   self._tolerance_value(plant, metric)
+                   for plant in self.plants)
+
+    def _padded_min(self, metric):
+        def ideal_minus_tolerance(plant):
+            return self._ideal_value(plant, metric) - \
+                   self._tolerance_value(plant, metric)
+
+        highest = max(self.plants, key=ideal_minus_tolerance)
+        return self._ideal_value(highest, metric) - \
+               0.75 * self._tolerance_value(highest, metric)
+
+    def _padded_max(self, metric):
+        def ideal_plus_tolerance(plant):
+            return self._ideal_value(plant, metric) + \
+                   self._tolerance_value(plant, metric)
+
+        lowest = min(self.plants, key=ideal_plus_tolerance)
+        return self._ideal_value(lowest, metric) + \
+               0.75 * self._tolerance_value(lowest, metric)
+
+    def _absolute_max(self, metric):
+        return min(self._ideal_value(plant, metric) + \
+                   self._tolerance_value(plant, metric)
+                   for plant in self.plants)
+
+    def _cannot_pad(self, metric):
+        return (self._padded_max(metric) < self._absolute_min(metric)) or \
+               (self._padded_min(metric) > self._absolute_max(metric)) or \
+               (self._padded_min(metric) > self.ideal(metric)) or \
+               (self._padded_max(metric) < self.ideal(metric))
