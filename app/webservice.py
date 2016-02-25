@@ -234,6 +234,13 @@ class PlantSettingsController(object):
                 return False
         return True
 
+@router.route("/settings", only=["index"])
+class GlobalSettingsController(object):
+
+    @staticmethod
+    def index():
+        return flask.render_template("global_settings/index.html")
+
 @app.route("/login", methods=["GET"])
 def login_page():
     return flask.render_template("sessions/new.html")

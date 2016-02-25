@@ -489,6 +489,26 @@ class TestSessions(unittest.TestCase):
         render_template.assert_called_with("sessions/new.html")
 
 
+class TestGlobalSettingsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    @mock.patch("app.webservice.flask.render_template")
+    def test_index_renders_form(self, render_template):
+        self.app.get("/settings")
+        render_template.assert_called_with("global_settings/index.html")
+
+    def test_returns_200_status_code(self):
+        response = self.app.get("/settings")
+        self.assertEqual(response.status_code, 200)
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",
