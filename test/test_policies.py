@@ -210,6 +210,15 @@ class TestIdealConditions(unittest.TestCase):
     def test_picks_max_for_light(self):
         self.assertEqual(self.conditions.max("light"), 57.5)
 
+    def test_determines_if_near_ideal(self):
+        # Upper bound for in range
+        self.assertTrue(self.conditions.near_ideal("water", 72))
+        # Lower bound in range
+        self.assertTrue(self.conditions.near_ideal("water", 62))
+        # Lower for out of range
+        self.assertFalse(self.conditions.near_ideal("water", 73))
+        # Upper for out of range
+        self.assertFalse(self.conditions.near_ideal("water", 61))
 
 def sensor_data_points():
     return mock.Mock(name="lazy_record.Query")

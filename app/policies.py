@@ -102,6 +102,14 @@ class IdealConditions(object):
         else:
             return self._padded_min(metric)
 
+    def near_ideal(self, metric, value):
+        """Returns True if the +value+ of +metric+ is closer to
+        ideal than the tolerance threshold"""
+        ideal = self.ideal(metric)
+        upper = (ideal + self.max(metric)) / 2.
+        lower = (ideal + self.min(metric)) / 2.
+        return lower < value < upper
+
     # Private methods
 
     def _ideal_value(self, plant, metric):
