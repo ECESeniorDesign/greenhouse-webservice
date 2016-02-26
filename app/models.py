@@ -6,6 +6,7 @@ from config import PLANT_DATABASE, NUMBER_OF_PLANTS
 import lazy_record
 from lazy_record.validations import *
 from lazy_record.associations import *
+import support
 
 @has_one("plant_setting")
 @has_many("sensor_data_points")
@@ -246,7 +247,60 @@ class GlobalSetting(object):
         def controls(cls):
             return []
 
-class Control(object):
+class Control(lazy_record.Base):
 
     class Always(object):
         pass
+
+    class TemporarilyDisabled(object):
+        pass
+
+    __attributes__ = {
+        'enabled': bool,
+        'name': str,
+        'disabled_at': lazy_record.datetime,
+        'active_start': lazy_record.datetime,
+        'active_end': lazy_record.datetime,
+    }
+
+    @property
+    def enabled(self):
+        if self._enabled and self.disabled_at is not None:
+            threshold = datetime.datetime.now() - \
+                        datetime.timedelta(minutes=15)
+            if threshold > self.disabled_at:
+                return True
+            else:
+                return Control.TemporarilyDisabled
+        else:
+            return bool(self._enabled)
+
+    @property
+    def active_during(self):
+        period = (self.active_start, self.active_end)
+        if None in period:
+            return Control.Always
+        return period
+
+    @property
+    def active_start(self):
+        if self._active_end is None:
+            return None
+        return support.time(self._active_start)
+
+    @property
+    def active_end(self):
+        if self._active_start is None:
+            return None
+        return support.time(self._active_end)
+
+    def _set_time(self, attr, value):
+        dummy_datetime = datetime.datetime.combine(datetime.date.today(),
+                                                   value)
+        setattr(self, "_" + attr, dummy_datetime)
+
+    def __setattr__(self, attr, value):
+        if attr in ('active_start', 'active_end'):
+            self._set_time(attr, value)
+        else:
+            super(Control, self).__setattr__(attr, value)

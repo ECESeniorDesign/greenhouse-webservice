@@ -2,7 +2,7 @@ import unittest
 import mock
 import os
 import sys
-from datetime import datetime as dt
+from datetime import datetime as dt, time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.models as models
 from app.config import TEST_DATABASE, SCHEMA
@@ -425,6 +425,71 @@ class TestToken(unittest.TestCase):
         models.Token.create(token="mytoken")
         models.Token.refresh()
         get.assert_called_with(token="mytoken")
+
+class TestControl(unittest.TestCase):
+
+    def setUp(self):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_true_when_enabled(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=True)
+        self.assertEqual(control.enabled, True)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_false_when_disabled(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=False,
+                                 disabled_at=dt(2016, 01, 10, 23, 47))
+        self.assertEqual(control.enabled, False)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_temp_when_disabled_recently(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=True,
+                                 disabled_at=dt(2016, 01, 10, 23, 47))
+        self.assertEqual(control.enabled, models.Control.TemporarilyDisabled)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_enabled_when_disabled_long_ago(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=True,
+                                 disabled_at=dt(2015, 01, 10, 23, 47))
+        self.assertEqual(control.enabled, True)
+
+    def test_round_trips_times_to_the_database(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=time(12, 05),
+                                        active_end=time(13, 11))
+        self.assertEqual(control.active_start, time(12, 05))
+        self.assertEqual(control.active_end, time(13, 11))
+
+    def test_active_during_is_active_period(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=time(12, 05),
+                                        active_end=time(13, 11))
+        self.assertEqual(control.active_during, (time(12, 05), time(13, 11)))
+
+    def test_active_during_is_always_if_no_period(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl")
+        self.assertEqual(control.active_during, models.Control.Always)
+
+    def test_duality_of_timestamps(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=time(12, 05))
+        self.assertEqual(control.active_start, None)
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_end=time(12, 05))
+        self.assertEqual(control.active_end, None)
+
 
 def plant_json():
     return {

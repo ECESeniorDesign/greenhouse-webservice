@@ -65,3 +65,15 @@ create table water_levels (
   created_at timestamp not null,
   updated_at timestamp not null
 );
+
+drop table if exists controls;
+create table controls (
+  id integer primary key autoincrement,
+  name text not null,
+  enabled boolean not null,
+  disabled_at timestamp,
+  active_start timestamp,
+  active_end timestamp,
+  created_at timestamp not null,
+  updated_at timestamp not null
+)
