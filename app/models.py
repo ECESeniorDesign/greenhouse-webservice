@@ -269,6 +269,7 @@ class Control(lazy_record.Base):
     __attributes__ = {
         'enabled': bool,
         'name': str,
+        'active': bool,
         'disabled_at': lazy_record.datetime,
         'active_start': lazy_record.datetime,
         'active_end': lazy_record.datetime,
@@ -319,6 +320,11 @@ class Control(lazy_record.Base):
 
     def activate(self):
         self.disabled_at = None
+        self.active = True
+        self.save()
+
+    def deactivate(self):
+        self.active = False
         self.save()
 
     def _set_time(self, attr, value):
@@ -337,4 +343,4 @@ class Control(lazy_record.Base):
 
     def temporarily_disable(self):
         self.disabled_at = datetime.datetime.now()
-        self.save()
+        self.deactivate()

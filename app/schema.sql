@@ -71,6 +71,7 @@ create table controls (
   id integer primary key autoincrement,
   name text not null,
   enabled boolean not null,
+  active boolean,
   disabled_at timestamp,
   active_start timestamp,
   active_end timestamp,

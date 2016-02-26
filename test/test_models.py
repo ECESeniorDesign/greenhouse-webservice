@@ -518,6 +518,7 @@ class TestControl(unittest.TestCase):
                                         name="fan")
         control.temporarily_disable()
         self.assertEqual(control.disabled_at, dt(2016, 01, 15))
+        self.assertEqual(control.active, False)
 
     @mock.patch("app.models.datetime.datetime")
     def test_activates(self, dat):
@@ -527,6 +528,15 @@ class TestControl(unittest.TestCase):
                                         name="fan")
         control.activate()
         self.assertEqual(control.disabled_at, None)
+        self.assertEqual(control.active, True)
+
+    def test_deactivates(self):
+        control = models.Control.create(enabled=True,
+                                        name="fan",
+                                        active=True)
+        control.deactivate()
+        self.assertEqual(control.active, False)
+
 
 class TestGlobalSetting(unittest.TestCase):
 
