@@ -234,12 +234,18 @@ class PlantSettingsController(object):
                 return False
         return True
 
-@router.route("/settings", only=["index"])
+@router.route("/settings", only=["index", "create"])
 class GlobalSettingsController(object):
 
     @staticmethod
     def index():
-        return flask.render_template("global_settings/index.html")
+        controls = models.GlobalSetting.controls
+        return flask.render_template("global_settings/index.html",
+                                     controls=controls)
+
+    @staticmethod
+    def create():
+        pass
 
 @app.route("/login", methods=["GET"])
 def login_page():

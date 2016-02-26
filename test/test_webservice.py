@@ -2,7 +2,7 @@ import unittest
 import mock
 import os
 import sys
-from datetime import datetime as dt
+from datetime import datetime as dt, time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.webservice as webservice
 from app.config import TEST_DATABASE, SCHEMA
@@ -499,12 +499,23 @@ class TestGlobalSettingsController(unittest.TestCase):
         with open(SCHEMA) as schema:
             webservice.models.lazy_record.load_schema(schema.read())
 
+    @mock.patch("app.webservice.models.GlobalSetting")
     @mock.patch("app.webservice.flask.render_template")
-    def test_index_renders_form(self, render_template):
+    def test_index_renders_form(self, render_template, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            active_during=(
+                                time(0, 12, 30),
+                                dt(1, 11, 15)))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
         self.app.get("/settings")
-        render_template.assert_called_with("global_settings/index.html")
+        render_template.assert_called_with("global_settings/index.html",
+                                           controls=[control])
 
-    def test_returns_200_status_code(self):
+    @mock.patch("app.webservice.models.GlobalSetting")
+    def test_returns_200_status_code(self, GlobalSetting):
+        GlobalSetting.controls = []
         response = self.app.get("/settings")
         self.assertEqual(response.status_code, 200)
 

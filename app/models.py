@@ -237,3 +237,16 @@ class WaterLevel(lazy_record.Base):
     __attributes__ = {
         "level": int,
     }
+
+
+class GlobalSetting(object):
+
+    class __metaclass__(type):
+        @property
+        def controls(cls):
+            return []
+
+class Control(object):
+
+    class Always(object):
+        pass
