@@ -220,6 +220,91 @@ class TestIdealConditions(unittest.TestCase):
         # Upper for out of range
         self.assertFalse(self.conditions.near_ideal("water", 61))
 
+
+class TestControlActivationPolicy(unittest.TestCase):
+
+    def setUp(self):
+        self.conditions = {
+            "water": {"ideal": 51.0, "min": 21.0, "max": 71.0},
+            "light": {"ideal": 51.0, "min": 21.0, "max": 71.0},
+            "humidity": {"ideal": 51.0, "min": 21.0, "max": 71.0},
+            "temperature": {"ideal": 51.0, "min": 21.0, "max": 71.0}
+        }
+        self.ideal_conditions = IdealConditionsStub(self.conditions)
+        self.controls = {
+            "light": mock.Mock(name="light_control", may_activate=True, active=False),
+            "pump": mock.Mock(name="pump_control", may_activate=True, active=False),
+            "fan": mock.Mock(name="fan_control", may_activate=True, active=False)
+        }
+        self.conditions = {
+            "light": 15.0,
+            "water": 15.0,
+            "humidity": 15.0,
+            "temperature": 15.0
+        }
+        self.policy = policies.ControlActivationPolicy(self.ideal_conditions,
+                                                       self.conditions,
+                                                       self.controls)
+
+    def test_activates_lights_if_below_min(self):
+        self.assertTrue(self.policy.should_activate("light"))
+
+    def test_does_not_activate_lights_above_min(self):
+        self.conditions["light"] = 25.0
+        self.assertFalse(self.policy.should_activate("light"))
+
+    def test_does_not_activate_lights_if_active(self):
+        self.controls["light"].active = True
+        self.assertFalse(self.policy.should_activate("light"))
+
+    def test_does_not_activate_lights_if_may_not_activate(self):
+        self.controls["light"].may_activate = False
+        self.assertFalse(self.policy.should_activate("light"))
+
+    def test_activates_fans_if_above_max(self):
+        self.conditions["humidity"] = 75.0
+        self.assertTrue(self.policy.should_activate("fan"))
+
+    def test_does_not_activate_fans_below_max(self):
+        self.assertFalse(self.policy.should_activate("fan"))
+
+    def test_does_not_activate_fans_if_active(self):
+        self.controls["fan"].active = True
+        self.conditions["humidity"] = 75.0
+        self.assertFalse(self.policy.should_activate("fan"))
+
+    def test_does_not_activate_fan_if_may_not_activate(self):
+        self.conditions["humidity"] = 75.0
+        self.controls["fan"].may_activate = False
+        self.assertFalse(self.policy.should_activate("fan"))
+
+    def test_activates_pump_if_humid_and_water_below_min(self):
+        self.assertTrue(self.policy.should_activate("pump"))
+
+    def test_does_not_activate_pump_if_water_above_min(self):
+        self.conditions["water"] = 25.0
+        self.assertFalse(self.policy.should_activate("pump"))
+
+    def test_does_not_activate_pump_if_humidity_above_min(self):
+        self.conditions["humidity"] = 25.0
+        self.assertFalse(self.policy.should_activate("pump"))
+
+
+class IdealConditionsStub(object):
+
+    def __init__(self, conditions):
+        self.conditions = conditions
+
+    def ideal(self, metric):
+        return self.conditions[metric]["ideal"]
+
+    def min(self, metric):
+        return self.conditions[metric]["min"]
+
+    def max(self, metric):
+        return self.conditions[metric]["max"]
+
+
 def sensor_data_points():
     return mock.Mock(name="lazy_record.Query")
 
