@@ -289,6 +289,60 @@ class TestControlActivationPolicy(unittest.TestCase):
         self.conditions["humidity"] = 25.0
         self.assertFalse(self.policy.should_activate("pump"))
 
+    def test_deactivates_lights_if_above_ideal(self):
+        self.controls["light"].active = True
+        self.conditions["light"] = 53.0
+        self.assertTrue(self.policy.should_deactivate("light"))
+
+    def test_does_not_deactivate_lights_below_ideal(self):
+        self.controls["light"].active = True
+        self.conditions["light"] = 50.0
+        self.assertFalse(self.policy.should_deactivate("light"))
+
+    def test_does_not_deactivate_lights_if_inactive(self):
+        self.conditions["light"] = 53.0
+        self.assertFalse(self.policy.should_deactivate("light"))
+
+    def test_deactivates_lights_if_may_not_activate(self):
+        self.controls["light"].active = True
+        self.conditions["light"] = 53.0
+        self.controls["light"].may_activate = False
+        self.assertTrue(self.policy.should_deactivate("light"))
+
+    def test_deactivates_fans_if_below_ideal(self):
+        self.controls["fan"].active = True
+        self.conditions["humidity"] = 50.0
+        self.assertTrue(self.policy.should_deactivate("fan"))
+
+    def test_does_not_deactivate_fans_above_ideal(self):
+        self.controls["fan"].active = True
+        self.conditions["humidity"] = 55.0
+        self.assertFalse(self.policy.should_activate("fan"))
+
+    def test_does_not_deactivate_fans_if_inactive(self):
+        self.controls["fan"].active = False
+        self.conditions["humidity"] = 50.0
+        self.assertFalse(self.policy.should_activate("fan"))
+
+    def test_deactivates_fan_if_may_not_activate(self):
+        self.controls["fan"].active = True
+        self.conditions["humidity"] = 50.0
+        self.controls["fan"].may_activate = False
+        self.assertTrue(self.policy.should_deactivate("fan"))
+
+    def test_does_not_deactivates_pump_if_humid_and_water_below_ideal(self):
+        self.controls["fan"].active = True
+        self.assertFalse(self.policy.should_deactivate("pump"))
+
+    def test_deactivates_pump_if_water_above_ideal(self):
+        self.controls["fan"].active = True
+        self.conditions["water"] = 55.0
+        self.assertFalse(self.policy.should_deactivate("pump"))
+
+    def test_deactivates_pump_if_humidity_above_ideal(self):
+        self.controls["fan"].active = True
+        self.conditions["humidity"] = 55.0
+        self.assertFalse(self.policy.should_deactivate("pump"))
 
 class IdealConditionsStub(object):
 

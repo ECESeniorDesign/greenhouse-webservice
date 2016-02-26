@@ -190,3 +190,22 @@ class ControlActivationPolicy(object):
                    for metric in effects[control_name]["increases"]) and \
                all(above_max(metric)
                    for metric in effects[control_name]["decreases"])
+
+    def should_deactivate(self, control_name):
+
+        def below_ideal(metric):
+            return self.conditions[metric] < self.ideal_conditions.ideal(metric)
+
+        def above_ideal(metric):
+            return self.conditions[metric] > self.ideal_conditions.ideal(metric)
+
+        control = self.controls[control_name]
+        if not control.active:
+            return False
+        if not control.may_activate:
+            return True
+        effects = ControlActivationPolicy.control_effects
+        return any(above_ideal(metric)
+                   for metric in effects[control_name]["increases"]) or \
+               any(below_ideal(metric)
+                   for metric in effects[control_name]["decreases"])
