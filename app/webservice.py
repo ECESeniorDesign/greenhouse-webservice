@@ -335,6 +335,19 @@ def send_data_to_client(slot_id):
         },
     }, namespace="/plants/{}".format(plant.slot_id))
 
+@socketio.on("update-control", namespace="/settings")
+def update_control(control_id, status):
+    # TODO actually update the control element
+    control = models.Control.find(int(control_id))
+    if status == "temporary_disable":
+        control.temporarily_disable()
+    else:
+        control.activate()
+    socketio.emit('control-updated', {
+        'control_id': control_id,
+        'status': status
+    }, namespace="/settings")
+
 # Background Tasks
 
 @background.task

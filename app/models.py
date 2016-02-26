@@ -317,6 +317,10 @@ class Control(lazy_record.Base):
             return ''
         return self.active_end.strftime("%I:%M %p")
 
+    def activate(self):
+        self.disabled_at = None
+        self.save()
+
     def _set_time(self, attr, value):
         if value is not None:
             dummy_datetime = datetime.datetime.combine(datetime.date.today(),
@@ -325,9 +329,12 @@ class Control(lazy_record.Base):
             dummy_datetime = None
         setattr(self, "_" + attr, dummy_datetime)
 
-
     def __setattr__(self, attr, value):
         if attr in ('active_start', 'active_end'):
             self._set_time(attr, value)
         else:
             super(Control, self).__setattr__(attr, value)
+
+    def temporarily_disable(self):
+        self.disabled_at = datetime.datetime.now()
+        self.save()

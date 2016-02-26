@@ -46,12 +46,12 @@
             <div class="form-group">
               {% if control.enabled %}
                 {% if control.active %}
-                  <a class="btn btn-warning" data-mode="temporary_disable"><i class="fa fa-pause"></i></a>
+                  <a class="btn btn-warning" data-action="update-control" data-mode="temporary_disable" id="toggle_control_{{ control.id }}"><i class="fa fa-pause"></i></a>
                 {% else %}
-                  <a class="btn btn-success" data-mode="activate"><i class="fa fa-play"></i></a>
+                  <a class="btn btn-success" data-action="update-control" data-mode="activate" id="toggle_control_{{ control.id }}"><i class="fa fa-play"></i></a>
                 {% endif %}
               {% else %}
-                <a class="btn btn-success disabled" data-mode="activate"><i class="fa fa-play"></i></a>
+                <a class="btn btn-success disabled" data-action="update-control" data-mode="activate" id="toggle_control_{{ control.id }}"><i class="fa fa-play"></i></a>
               {% endif %}
             </div>
             <div class="form-group">
