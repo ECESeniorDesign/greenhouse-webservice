@@ -514,10 +514,40 @@ class TestGlobalSettingsController(unittest.TestCase):
                                            controls=[control])
 
     @mock.patch("app.webservice.models.GlobalSetting")
-    def test_returns_200_status_code(self, GlobalSetting):
+    def test_index_returns_200_status_code(self, GlobalSetting):
         GlobalSetting.controls = []
         response = self.app.get("/settings")
         self.assertEqual(response.status_code, 200)
+
+    @mock.patch("app.webservice.forms.GlobalSettingsForm")
+    @mock.patch("app.webservice.models.GlobalSetting")
+    def test_create_redirects_home(self, GlobalSetting, gs_form):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            active_during=(
+                                time(0, 12, 30),
+                                dt(1, 11, 15)))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        response = self.app.post("/settings")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'],
+                         'http://localhost/plants')
+
+    @mock.patch("app.webservice.forms.GlobalSettingsForm")
+    @mock.patch("app.webservice.flask")
+    @mock.patch("app.webservice.models.GlobalSetting")
+    def test_create_submits_form(self, GlobalSetting, flask, gs_form):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            active_during=(
+                                time(0, 12, 30),
+                                dt(1, 11, 15)))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        self.app.post("/settings")
+        gs_form.assert_called_with([control], flask.request.form)
+        gs_form.return_value.submit.assert_called_with()
 
 
 def build_plant(slot_id=1):

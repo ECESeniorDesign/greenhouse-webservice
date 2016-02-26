@@ -243,9 +243,20 @@ class WaterLevel(lazy_record.Base):
 class GlobalSetting(object):
 
     class __metaclass__(type):
+
         @property
         def controls(cls):
-            return []
+            return Control.all()
+
+        @property
+        def enabled_controls(cls):
+            return Control.where(enabled=True)
+
+        def control(cls, control):
+            try:
+                return Control.find_by(name=control)
+            except lazy_record.RecordNotFound:
+                return None
 
 class Control(lazy_record.Base):
 
@@ -294,10 +305,26 @@ class Control(lazy_record.Base):
             return None
         return support.time(self._active_end)
 
+    @property
+    def active_start_time(self):
+        if self.active_start is None:
+            return ''
+        return self.active_start.strftime("%I:%M %p")
+
+    @property
+    def active_end_time(self):
+        if self.active_end is None:
+            return ''
+        return self.active_end.strftime("%I:%M %p")
+
     def _set_time(self, attr, value):
-        dummy_datetime = datetime.datetime.combine(datetime.date.today(),
-                                                   value)
+        if value is not None:
+            dummy_datetime = datetime.datetime.combine(datetime.date.today(),
+                                                       value)
+        else:
+            dummy_datetime = None
         setattr(self, "_" + attr, dummy_datetime)
+
 
     def __setattr__(self, attr, value):
         if attr in ('active_start', 'active_end'):

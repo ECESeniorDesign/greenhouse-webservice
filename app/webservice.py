@@ -1,5 +1,6 @@
 import flask
 import models
+import forms
 import router
 import config
 import eventlet
@@ -245,7 +246,10 @@ class GlobalSettingsController(object):
 
     @staticmethod
     def create():
-        pass
+        controls = models.GlobalSetting.controls
+        form = forms.GlobalSettingsForm(controls, flask.request.form)
+        form.submit()
+        return flask.redirect(flask.url_for('PlantsController.index'))
 
 @app.route("/login", methods=["GET"])
 def login_page():

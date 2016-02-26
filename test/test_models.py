@@ -468,6 +468,14 @@ class TestControl(unittest.TestCase):
         self.assertEqual(control.active_start, time(12, 05))
         self.assertEqual(control.active_end, time(13, 11))
 
+    def test_round_trips_none_times_to_database(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=None,
+                                        active_end=None)
+        self.assertEqual(control.active_start, None)
+        self.assertEqual(control.active_end, None)
+
     def test_active_during_is_active_period(self):
         control = models.Control.create(enabled=True,
                                         name="testControl",
@@ -489,6 +497,41 @@ class TestControl(unittest.TestCase):
                                         name="testControl",
                                         active_end=time(12, 05))
         self.assertEqual(control.active_end, None)
+
+    def test_timestamp_formatting(self):
+        control = models.Control(enabled=True,
+                                 active_start=time(12, 05),
+                                 active_end=time(0, 11))
+        self.assertEqual(control.active_start_time, '12:05 PM')
+        self.assertEqual(control.active_end_time, '12:11 AM')
+
+    def test_timestamp_formatting_with_none(self):
+        control = models.Control(enabled=True)
+        self.assertEqual(control.active_start_time, '')
+        self.assertEqual(control.active_end_time, '')
+
+
+class TestGlobalSetting(unittest.TestCase):
+
+    @mock.patch("app.models.Control")
+    def test_finds_controls(self, Control):
+        models.GlobalSetting.controls
+        Control.all.assert_called_with()
+
+    @mock.patch("app.models.Control")
+    def test_finds_enabled_controls(self, Control):
+        models.GlobalSetting.enabled_controls
+        Control.where.assert_called_with(enabled=True)
+
+    @mock.patch("app.models.Control")
+    def test_finds_controls_by_name(self, Control):
+        models.GlobalSetting.control("fans")
+        Control.find_by.assert_called_with(name="fans")
+
+    @mock.patch("app.models.Control")
+    def test_control_returns_none_if_no_control(self, Control):
+        Control.find_by.side_effect = models.lazy_record.RecordNotFound
+        self.assertEqual(models.GlobalSetting.control("fans"), None)
 
 
 def plant_json():

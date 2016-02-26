@@ -3,6 +3,7 @@ import app.config as config
 import lazy_record
 import app.models as models
 import app.webservice
+import app.seeds
 from app.lib.coffee import coffee
 
 def main():
@@ -10,6 +11,7 @@ def main():
         lazy_record.connect_db(config.DATABASE)
         with open(config.SCHEMA) as schema:
             lazy_record.load_schema(schema.read())
+        app.seeds.seed()
     elif sys.argv[1] in ("server", "s"):
         coffee(app.webservice.app)
         app.webservice.models.lazy_record.connect_db(config.DATABASE)

@@ -20,11 +20,10 @@ class GlobalSettingsForm(object):
         enabled = map(int, self.form_data.getlist('enabled'))
         active_starts = self.form_data.getlist('active_start')
         active_ends = self.form_data.getlist('active_end')
-        ids = self.form_data.getlist('id')
-        data = zip(active_starts, active_ends, ids)
-        as_val, ae_val = next((astart, aend)
+        data = zip(active_starts, active_ends, enabled)
+        as_val, ae_val = next(((astart, aend)
                               for astart, aend, id in data
-                              if int(id) == control_id)
+                              if int(id) == control_id), ('', ''))
         active_start = self._parse_timestamp(as_val)
         active_end = self._parse_timestamp(ae_val)
         return {

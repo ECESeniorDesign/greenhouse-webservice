@@ -35,6 +35,8 @@ class TestGlobalSettingsForm(unittest.TestCase):
     def test_parses_form_data_with_disabled(self):
         # Unchecked checkboxes give nothing back at all
         self.form_data['enabled'] = ['2']
+        self.form_data['active_start'] = ['02:00 PM']
+        self.form_data['active_end'] = ['01:30 AM']
         self.assertEqual(self.form.data, {
             self.controls[0]: {
                 'enabled': False,
@@ -67,6 +69,8 @@ class TestGlobalSettingsForm(unittest.TestCase):
 
     def test_submit_saves_form(self):
         self.form_data['enabled'] = ['2']
+        self.form_data['active_start'] = ['02:00 PM']
+        self.form_data['active_end'] = ['01:30 AM']
         self.form.submit()
         self.controls[0].update.assert_called_with(active_start=None,
                                                    active_end=None,
