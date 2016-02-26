@@ -537,6 +537,58 @@ class TestControl(unittest.TestCase):
         control.deactivate()
         self.assertEqual(control.active, False)
 
+    def test_may_activate_when_enabled(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True)
+        self.assertTrue(control.may_activate)
+
+    def test_may_not_activate_when_not_enabled(self):
+        control = models.Control.create(name="fan",
+                                        enabled=False)
+        self.assertFalse(control.may_activate)
+
+    def test_may_not_activate_when_temp_disabled(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True)
+        control.temporarily_disable()
+        self.assertFalse(control.may_activate)
+
+    def test_may_not_activate_outside_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(2, 05),
+                                        active_end=time(3, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 4, 15)
+            self.assertFalse(control.may_activate)
+
+    def test_may_activate_in_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(2, 05),
+                                        active_end=time(3, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 2, 15)
+            self.assertTrue(control.may_activate)
+
+    def test_may_activate_outside_inverted_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(3, 05),
+                                        active_end=time(2, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 4, 15)
+            self.assertTrue(control.may_activate)
+
+    def test_may_not_activate_inside_inverted_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(4, 05),
+                                        active_end=time(3, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 3, 15)
+            self.assertFalse(control.may_activate)
+
 
 class TestGlobalSetting(unittest.TestCase):
 

@@ -344,3 +344,21 @@ class Control(lazy_record.Base):
     def temporarily_disable(self):
         self.disabled_at = datetime.datetime.now()
         self.deactivate()
+
+    @property
+    def may_activate(self):
+        # Cannot activate if not currently enabled
+        if self.enabled in (False, Control.TemporarilyDisabled):
+            return False
+        # Time window isn't an issue if it has no restriction
+        if self.active_during is Control.Always:
+            return True
+        # Is is within the time window?
+        after_start = self.active_start < datetime.datetime.now().time()
+        before_end = datetime.datetime.now().time() < self.active_end
+        # Do we want it within the time window (if end is before start,
+        # then we want it outside the window)
+        if self.active_start < self.active_end:
+            return after_start and before_end
+        else:
+            return after_start or before_end
