@@ -151,3 +151,61 @@ class IdealConditions(object):
                (self._padded_min(metric) > self._absolute_max(metric)) or \
                (self._padded_min(metric) > self.ideal(metric)) or \
                (self._padded_max(metric) < self.ideal(metric))
+
+class ControlActivationPolicy(object):
+
+    control_effects = {
+        "fan": {
+            "increases": [],
+            "decreases": ["humidity"]
+        },
+        "light": {
+            "increases": ["light"],
+            "decreases": []
+        },
+        "pump": {
+            "increases": ["humidity", "water"],
+            "decreases": []
+        }
+    }
+
+    def __init__(self, ideal_conditions, current_conditions, controls):
+        self.ideal_conditions = ideal_conditions
+        self.conditions = current_conditions
+        self.controls = controls
+
+    def should_activate(self, control_name):
+
+        def below_min(metric):
+            return self.conditions[metric] < self.ideal_conditions.min(metric)
+
+        def above_max(metric):
+            return self.conditions[metric] > self.ideal_conditions.max(metric)
+
+        control = self.controls[control_name]
+        if control.active or not control.may_activate:
+            return False
+        effects = ControlActivationPolicy.control_effects
+        return all(below_min(metric)
+                   for metric in effects[control_name]["increases"]) and \
+               all(above_max(metric)
+                   for metric in effects[control_name]["decreases"])
+
+    def should_deactivate(self, control_name):
+
+        def below_ideal(metric):
+            return self.conditions[metric] < self.ideal_conditions.ideal(metric)
+
+        def above_ideal(metric):
+            return self.conditions[metric] > self.ideal_conditions.ideal(metric)
+
+        control = self.controls[control_name]
+        if not control.active:
+            return False
+        if not control.may_activate:
+            return True
+        effects = ControlActivationPolicy.control_effects
+        return any(above_ideal(metric)
+                   for metric in effects[control_name]["increases"]) or \
+               any(below_ideal(metric)
+                   for metric in effects[control_name]["decreases"])

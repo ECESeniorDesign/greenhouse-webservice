@@ -2,6 +2,7 @@ import datetime
 import requests
 from config import PLANT_DATABASE
 import models
+from greenhouse_envmgmt.control import ControlCluster
 
 class Notifier(object):
 
@@ -53,3 +54,17 @@ class PlantUpdater(object):
             return True
         except:
             return False
+
+class Control(object):
+    """Wrapper for greenhouse_envmgmt Control API"""
+
+    cluster = ControlCluster(1)
+
+    def __init__(self, name):
+        self.name = name
+
+    def on(self):
+        Control.cluster.control(on=self.name)
+
+    def off(self):
+        Control.cluster.control(off=self.name)

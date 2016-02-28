@@ -2,7 +2,7 @@ import unittest
 import mock
 import os
 import sys
-from datetime import datetime as dt
+from datetime import datetime as dt, time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.webservice as webservice
 from app.config import TEST_DATABASE, SCHEMA
@@ -487,6 +487,67 @@ class TestSessions(unittest.TestCase):
                                        'password':'mysupersecretpassword'})
         flash.assert_called_with("Invalid Credentials", "error")
         render_template.assert_called_with("sessions/new.html")
+
+
+class TestGlobalSettingsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    @mock.patch("app.webservice.models.GlobalSetting")
+    @mock.patch("app.webservice.flask.render_template")
+    def test_index_renders_form(self, render_template, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            active_during=(
+                                time(0, 12, 30),
+                                dt(1, 11, 15)))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        self.app.get("/settings")
+        render_template.assert_called_with("global_settings/index.html",
+                                           controls=[control])
+
+    @mock.patch("app.webservice.models.GlobalSetting")
+    def test_index_returns_200_status_code(self, GlobalSetting):
+        GlobalSetting.controls = []
+        response = self.app.get("/settings")
+        self.assertEqual(response.status_code, 200)
+
+    @mock.patch("app.webservice.forms.GlobalSettingsForm")
+    @mock.patch("app.webservice.models.GlobalSetting")
+    def test_create_redirects_home(self, GlobalSetting, gs_form):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            active_during=(
+                                time(0, 12, 30),
+                                dt(1, 11, 15)))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        response = self.app.post("/settings")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'],
+                         'http://localhost/plants')
+
+    @mock.patch("app.webservice.forms.GlobalSettingsForm")
+    @mock.patch("app.webservice.flask")
+    @mock.patch("app.webservice.models.GlobalSetting")
+    def test_create_submits_form(self, GlobalSetting, flask, gs_form):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            active_during=(
+                                time(0, 12, 30),
+                                dt(1, 11, 15)))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        self.app.post("/settings")
+        gs_form.assert_called_with([control], flask.request.form)
+        gs_form.return_value.submit.assert_called_with()
 
 
 def build_plant(slot_id=1):

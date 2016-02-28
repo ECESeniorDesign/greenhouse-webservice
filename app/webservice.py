@@ -1,5 +1,6 @@
 import flask
 import models
+import forms
 import router
 import config
 import eventlet
@@ -234,6 +235,22 @@ class PlantSettingsController(object):
                 return False
         return True
 
+@router.route("/settings", only=["index", "create"])
+class GlobalSettingsController(object):
+
+    @staticmethod
+    def index():
+        controls = models.GlobalSetting.controls
+        return flask.render_template("global_settings/index.html",
+                                     controls=controls)
+
+    @staticmethod
+    def create():
+        controls = models.GlobalSetting.controls
+        form = forms.GlobalSettingsForm(controls, flask.request.form)
+        form.submit()
+        return flask.redirect(flask.url_for('PlantsController.index'))
+
 @app.route("/login", methods=["GET"])
 def login_page():
     return flask.render_template("sessions/new.html")
@@ -317,6 +334,19 @@ def send_data_to_client(slot_id):
             'value': presenter.formatted_value('temperature'),
         },
     }, namespace="/plants/{}".format(plant.slot_id))
+
+@socketio.on("update-control", namespace="/settings")
+def update_control(control_id, status):
+    # TODO actually update the control element
+    control = models.Control.find(int(control_id))
+    if status == "temporary_disable":
+        control.temporarily_disable()
+    else:
+        control.activate()
+    socketio.emit('control-updated', {
+        'control_id': control_id,
+        'status': status
+    }, namespace="/settings")
 
 # Background Tasks
 

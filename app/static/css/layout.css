@@ -79,3 +79,11 @@
 #inner-content {
   margin-bottom: 15px;
 }
+
+.setting-label {
+  font-size: 18px;
+}
+
+.control-row {
+  margin-bottom: 5px;
+}

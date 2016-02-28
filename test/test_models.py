@@ -2,7 +2,7 @@ import unittest
 import mock
 import os
 import sys
-from datetime import datetime as dt
+from datetime import datetime as dt, time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.models as models
 from app.config import TEST_DATABASE, SCHEMA
@@ -425,6 +425,201 @@ class TestToken(unittest.TestCase):
         models.Token.create(token="mytoken")
         models.Token.refresh()
         get.assert_called_with(token="mytoken")
+
+class TestControl(unittest.TestCase):
+
+    def setUp(self):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_true_when_enabled(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=True)
+        self.assertEqual(control.enabled, True)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_false_when_disabled(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=False,
+                                 disabled_at=dt(2016, 01, 10, 23, 47))
+        self.assertEqual(control.enabled, False)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_temp_when_disabled_recently(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=True,
+                                 disabled_at=dt(2016, 01, 10, 23, 47))
+        self.assertEqual(control.enabled, models.Control.TemporarilyDisabled)
+
+    @mock.patch("app.models.datetime.datetime")
+    def test_enabled_is_enabled_when_disabled_long_ago(self, dat):
+        dat.now.return_value = dt(2016, 01, 11)
+        control = models.Control(enabled=True,
+                                 disabled_at=dt(2015, 01, 10, 23, 47))
+        self.assertEqual(control.enabled, True)
+
+    def test_round_trips_times_to_the_database(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=time(12, 05),
+                                        active_end=time(13, 11))
+        self.assertEqual(control.active_start, time(12, 05))
+        self.assertEqual(control.active_end, time(13, 11))
+
+    def test_round_trips_none_times_to_database(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=None,
+                                        active_end=None)
+        self.assertEqual(control.active_start, None)
+        self.assertEqual(control.active_end, None)
+
+    def test_active_during_is_active_period(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=time(12, 05),
+                                        active_end=time(13, 11))
+        self.assertEqual(control.active_during, (time(12, 05), time(13, 11)))
+
+    def test_active_during_is_always_if_no_period(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl")
+        self.assertEqual(control.active_during, models.Control.Always)
+
+    def test_duality_of_timestamps(self):
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_start=time(12, 05))
+        self.assertEqual(control.active_start, None)
+        control = models.Control.create(enabled=True,
+                                        name="testControl",
+                                        active_end=time(12, 05))
+        self.assertEqual(control.active_end, None)
+
+    def test_timestamp_formatting(self):
+        control = models.Control(enabled=True,
+                                 active_start=time(12, 05),
+                                 active_end=time(0, 11))
+        self.assertEqual(control.active_start_time, '12:05 PM')
+        self.assertEqual(control.active_end_time, '12:11 AM')
+
+    def test_timestamp_formatting_with_none(self):
+        control = models.Control(enabled=True)
+        self.assertEqual(control.active_start_time, '')
+        self.assertEqual(control.active_end_time, '')
+
+    @mock.patch("app.models.Control.deactivate")
+    @mock.patch("app.models.datetime.datetime")
+    def test_temporarily_disables(self, dat, deactivate):
+        dat.now.return_value = dt(2016, 01, 15)
+        dat.today.return_value = dt(2015, 01, 15)
+        control = models.Control.create(enabled=True,
+                                        name="fan")
+        control.temporarily_disable()
+        self.assertEqual(control.disabled_at, dt(2016, 01, 15))
+        deactivate.assert_called_with()
+
+    @mock.patch("app.models.services.Control")
+    @mock.patch("app.models.datetime.datetime")
+    def test_activates(self, dat, Control):
+        dat.now.return_value = dt(2016, 01, 15)
+        dat.today.return_value = dt(2015, 01, 15)
+        control = models.Control.create(enabled=True,
+                                        name="fan")
+        control.activate()
+        Control.assert_called_with("fan")
+        Control.return_value.on.assert_called_with()
+        self.assertEqual(control.disabled_at, None)
+        self.assertEqual(control.active, True)
+
+    @mock.patch("app.models.services.Control")
+    def test_deactivates(self, Control):
+        control = models.Control.create(enabled=True,
+                                        name="fan",
+                                        active=True)
+        control.deactivate()
+        Control.assert_called_with("fan")
+        Control.return_value.off.assert_called_with()
+        self.assertEqual(control.active, False)
+
+    def test_may_activate_when_enabled(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True)
+        self.assertTrue(control.may_activate)
+
+    def test_may_not_activate_when_not_enabled(self):
+        control = models.Control.create(name="fan",
+                                        enabled=False)
+        self.assertFalse(control.may_activate)
+
+    @mock.patch("app.models.Control.deactivate")
+    def test_may_not_activate_when_temp_disabled(self, deactivate):
+        control = models.Control.create(name="fan",
+                                        enabled=True)
+        control.temporarily_disable()
+        self.assertFalse(control.may_activate)
+
+    def test_may_not_activate_outside_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(2, 05),
+                                        active_end=time(3, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 4, 15)
+            self.assertFalse(control.may_activate)
+
+    def test_may_activate_in_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(2, 05),
+                                        active_end=time(3, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 2, 15)
+            self.assertTrue(control.may_activate)
+
+    def test_may_activate_outside_inverted_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(3, 05),
+                                        active_end=time(2, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 4, 15)
+            self.assertTrue(control.may_activate)
+
+    def test_may_not_activate_inside_inverted_time_window(self):
+        control = models.Control.create(name="fan",
+                                        enabled=True,
+                                        active_start=time(4, 05),
+                                        active_end=time(3, 11))
+        with mock.patch("app.models.datetime.datetime") as dat:
+            dat.now.return_value = dt(2016, 05, 11, 3, 15)
+            self.assertFalse(control.may_activate)
+
+
+class TestGlobalSetting(unittest.TestCase):
+
+    @mock.patch("app.models.Control")
+    def test_finds_controls(self, Control):
+        models.GlobalSetting.controls
+        Control.all.assert_called_with()
+
+    @mock.patch("app.models.Control")
+    def test_finds_enabled_controls(self, Control):
+        models.GlobalSetting.enabled_controls
+        Control.where.assert_called_with(enabled=True)
+
+    @mock.patch("app.models.Control")
+    def test_finds_controls_by_name(self, Control):
+        models.GlobalSetting.control("fans")
+        Control.find_by.assert_called_with(name="fans")
+
+    @mock.patch("app.models.Control")
+    def test_control_returns_none_if_no_control(self, Control):
+        Control.find_by.side_effect = models.lazy_record.RecordNotFound
+        self.assertEqual(models.GlobalSetting.control("fans"), None)
+
 
 def plant_json():
     return {

@@ -6,6 +6,8 @@ from config import PLANT_DATABASE, NUMBER_OF_PLANTS
 import lazy_record
 from lazy_record.validations import *
 from lazy_record.associations import *
+import support
+import services
 
 @has_one("plant_setting")
 @has_many("sensor_data_points")
@@ -237,3 +239,129 @@ class WaterLevel(lazy_record.Base):
     __attributes__ = {
         "level": int,
     }
+
+
+class GlobalSetting(object):
+
+    class __metaclass__(type):
+
+        @property
+        def controls(cls):
+            return Control.all()
+
+        @property
+        def enabled_controls(cls):
+            return Control.where(enabled=True)
+
+        def control(cls, control):
+            try:
+                return Control.find_by(name=control)
+            except lazy_record.RecordNotFound:
+                return None
+
+class Control(lazy_record.Base):
+
+    class Always(object):
+        pass
+
+    class TemporarilyDisabled(object):
+        pass
+
+    __attributes__ = {
+        'enabled': bool,
+        'name': str,
+        'active': bool,
+        'disabled_at': lazy_record.datetime,
+        'active_start': lazy_record.datetime,
+        'active_end': lazy_record.datetime,
+    }
+
+    @property
+    def enabled(self):
+        if self._enabled and self.disabled_at is not None:
+            threshold = datetime.datetime.now() - \
+                        datetime.timedelta(minutes=15)
+            if threshold > self.disabled_at:
+                return True
+            else:
+                return Control.TemporarilyDisabled
+        else:
+            return bool(self._enabled)
+
+    @property
+    def active_during(self):
+        period = (self.active_start, self.active_end)
+        if None in period:
+            return Control.Always
+        return period
+
+    @property
+    def active_start(self):
+        if self._active_end is None:
+            return None
+        return support.time(self._active_start)
+
+    @property
+    def active_end(self):
+        if self._active_start is None:
+            return None
+        return support.time(self._active_end)
+
+    @property
+    def active_start_time(self):
+        if self.active_start is None:
+            return ''
+        return self.active_start.strftime("%I:%M %p")
+
+    @property
+    def active_end_time(self):
+        if self.active_end is None:
+            return ''
+        return self.active_end.strftime("%I:%M %p")
+
+    def activate(self):
+        self.disabled_at = None
+        self.active = True
+        services.Control(self.name).on()
+        self.save()
+
+    def deactivate(self):
+        self.active = False
+        services.Control(self.name).off()
+        self.save()
+
+    def _set_time(self, attr, value):
+        if value is not None:
+            dummy_datetime = datetime.datetime.combine(datetime.date.today(),
+                                                       value)
+        else:
+            dummy_datetime = None
+        setattr(self, "_" + attr, dummy_datetime)
+
+    def __setattr__(self, attr, value):
+        if attr in ('active_start', 'active_end'):
+            self._set_time(attr, value)
+        else:
+            super(Control, self).__setattr__(attr, value)
+
+    def temporarily_disable(self):
+        self.disabled_at = datetime.datetime.now()
+        self.deactivate()
+
+    @property
+    def may_activate(self):
+        # Cannot activate if not currently enabled
+        if self.enabled in (False, Control.TemporarilyDisabled):
+            return False
+        # Time window isn't an issue if it has no restriction
+        if self.active_during is Control.Always:
+            return True
+        # Is is within the time window?
+        after_start = self.active_start < datetime.datetime.now().time()
+        before_end = datetime.datetime.now().time() < self.active_end
+        # Do we want it within the time window (if end is before start,
+        # then we want it outside the window)
+        if self.active_start < self.active_end:
+            return after_start and before_end
+        else:
+            return after_start or before_end

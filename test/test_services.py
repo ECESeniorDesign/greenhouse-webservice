@@ -120,5 +120,19 @@ class TestPlantUpdater(unittest.TestCase):
         self.assertEqual(self.updater.update(), True)
 
 
+@mock.patch("app.services.Control.cluster")
+class TestControl(unittest.TestCase):
+
+    def test_drives_element(self, cluster):
+        control = services.Control("light")
+        control.on()
+        cluster.control.assert_called_with(on="light")
+
+    def test_disables_element(self, cluster):
+        control = services.Control("light")
+        control.off()
+        cluster.control.assert_called_with(off="light")
+
+
 if __name__ == '__main__':
     unittest.main()
