@@ -510,31 +510,38 @@ class TestControl(unittest.TestCase):
         self.assertEqual(control.active_start_time, '')
         self.assertEqual(control.active_end_time, '')
 
+    @mock.patch("app.models.Control.deactivate")
     @mock.patch("app.models.datetime.datetime")
-    def test_temporarily_disables(self, dat):
+    def test_temporarily_disables(self, dat, deactivate):
         dat.now.return_value = dt(2016, 01, 15)
         dat.today.return_value = dt(2015, 01, 15)
         control = models.Control.create(enabled=True,
                                         name="fan")
         control.temporarily_disable()
         self.assertEqual(control.disabled_at, dt(2016, 01, 15))
-        self.assertEqual(control.active, False)
+        deactivate.assert_called_with()
 
+    @mock.patch("app.models.services.Control")
     @mock.patch("app.models.datetime.datetime")
-    def test_activates(self, dat):
+    def test_activates(self, dat, Control):
         dat.now.return_value = dt(2016, 01, 15)
         dat.today.return_value = dt(2015, 01, 15)
         control = models.Control.create(enabled=True,
                                         name="fan")
         control.activate()
+        Control.assert_called_with("fan")
+        Control.return_value.on.assert_called_with()
         self.assertEqual(control.disabled_at, None)
         self.assertEqual(control.active, True)
 
-    def test_deactivates(self):
+    @mock.patch("app.models.services.Control")
+    def test_deactivates(self, Control):
         control = models.Control.create(enabled=True,
                                         name="fan",
                                         active=True)
         control.deactivate()
+        Control.assert_called_with("fan")
+        Control.return_value.off.assert_called_with()
         self.assertEqual(control.active, False)
 
     def test_may_activate_when_enabled(self):
@@ -547,7 +554,8 @@ class TestControl(unittest.TestCase):
                                         enabled=False)
         self.assertFalse(control.may_activate)
 
-    def test_may_not_activate_when_temp_disabled(self):
+    @mock.patch("app.models.Control.deactivate")
+    def test_may_not_activate_when_temp_disabled(self, deactivate):
         control = models.Control.create(name="fan",
                                         enabled=True)
         control.temporarily_disable()

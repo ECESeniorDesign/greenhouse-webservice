@@ -7,6 +7,7 @@ import lazy_record
 from lazy_record.validations import *
 from lazy_record.associations import *
 import support
+import services
 
 @has_one("plant_setting")
 @has_many("sensor_data_points")
@@ -321,10 +322,12 @@ class Control(lazy_record.Base):
     def activate(self):
         self.disabled_at = None
         self.active = True
+        services.Control(self.name).on()
         self.save()
 
     def deactivate(self):
         self.active = False
+        services.Control(self.name).off()
         self.save()
 
     def _set_time(self, attr, value):
