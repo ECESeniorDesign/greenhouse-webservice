@@ -13,6 +13,10 @@ def main():
             lazy_record.load_schema(schema.read())
         app.seeds.seed()
     elif sys.argv[1] in ("server", "s"):
+        # Remove these for production
+        import mock
+        app.webservice.models.services.ControlCluster.bus = mock.Mock(
+            name="bus")
         coffee(app.webservice.app)
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
         app.webservice.run()
