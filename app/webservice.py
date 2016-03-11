@@ -269,7 +269,7 @@ router.root(PlantsController, "index")
 
 # API
 
-@router.route("/api/plants", only=["index"])
+@router.route("/api/plants", only=["index", "show"])
 class APIPlantsController(object):
 
     @staticmethod
@@ -288,6 +288,41 @@ class APIPlantsController(object):
                 'plant_database_id': plant.plant_database_id,
             })
         return flask.jsonify({'plants': plants, 'water_level': level})
+
+    @staticmethod
+    def show(id):
+        plant = models.Plant.for_slot(id, raise_if_not_found=False)
+        if plant:
+            data = {
+                'name': plant.name,
+                'light': {
+                    'ideal': plant.light_ideal,
+                    'tolerance': plant.light_tolerance,
+                    'current': plant.light
+                },
+                'water': {
+                    'ideal': plant.water_ideal,
+                    'tolerance': plant.water_tolerance,
+                    'current': plant.water
+                },
+                'humidity': {
+                    'ideal': plant.humidity_ideal,
+                    'tolerance': plant.humidity_tolerance,
+                    'current': plant.humidity
+                },
+                'temperature': {
+                    'ideal': plant.temperature_ideal,
+                    'tolerance': plant.temperature_tolerance,
+                    'current': plant.temperature
+                },
+                'mature_on': plant.mature_on,
+                'slot_id': plant.slot_id,
+                'photo_url': plant.photo_url,
+                'plant_database_id': plant.plant_database_id,
+            }
+        else:
+            data = {}
+        return flask.jsonify(data)
 
 # Error Recovery
 

@@ -591,6 +591,47 @@ class TestAPIPlantsController(unittest.TestCase):
            'water_level': 51
         })
 
+    def test_show_gives_plant_condition_information(self):
+        webservice.models.WaterLevel.create(level=51)
+        plant = build_plant()
+        plant.save()
+        plant.record_sensor("light", 53.0)
+        plant.record_sensor("water", 63.0)
+        plant.record_sensor("humidity", 0.2)
+        plant.record_sensor("temperature", 18.0)
+        response = self.app.get("/api/plants/1")
+        self.assertEqual(json.loads(response.data), {
+           'name': "testPlant",
+           'photo_url': "testPlant.png",
+           'light': {
+               'current': 53.0,
+               'ideal': 50.0,
+               'tolerance': 10.0,
+           },
+           'water': {
+               'current': 63.0,
+               'ideal': 57.0,
+               'tolerance': 30.0,
+           },
+           'humidity': {
+               'current': 0.2,
+               'ideal': 0.2,
+               'tolerance': 0.1,
+           },
+           'temperature': {
+               'current': 18.0,
+               'ideal': 11.2,
+               'tolerance': 15.3,
+           },
+           'mature_on': 'Sun, 10 Jan 2016 00:00:00 GMT',
+           'slot_id': 1,
+           'plant_database_id': 1,
+        })
+
+    def test_show_returns_nothing_if_no_plant(self):
+        response = self.app.get("/api/plants/1")
+        self.assertEqual(json.loads(response.data), {})
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",
