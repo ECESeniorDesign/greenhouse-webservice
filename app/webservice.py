@@ -269,7 +269,7 @@ router.root(PlantsController, "index")
 
 # API
 
-@router.route("/api/plants", only=["index", "show"])
+@router.route("/api/plants", only=["index", "show", "create"])
 class APIPlantsController(object):
 
     @staticmethod
@@ -290,6 +290,18 @@ class APIPlantsController(object):
     def show(id):
         plant = models.Plant.for_slot(id, raise_if_not_found=False)
         return flask.jsonify(presenters.APIPlantPresenter(plant).long_info())
+
+    @staticmethod
+    def create():
+        plant_database_id = int(flask.request.form["plant_database_id"])
+        slot_id = int(flask.request.form["slot_id"])
+        plant = models.PlantDatabase.find_plant(plant_database_id)
+        if plant:
+            plant.slot_id = slot_id
+            plant.save()
+            return flask.jsonify(presenters.APIPlantPresenter(plant).long_info())
+        else:
+            return flask.jsonify({'error': 'could not save plant'})
 
 # Error Recovery
 

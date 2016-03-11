@@ -632,6 +632,64 @@ class TestAPIPlantsController(unittest.TestCase):
         response = self.app.get("/api/plants/1")
         self.assertEqual(json.loads(response.data), {})
 
+    @mock.patch("app.webservice.models.PlantDatabase")
+    def test_successful_create_returns_data(self, PlantDatabase):
+        PlantDatabase.find_plant.return_value = build_plant()
+        response = self.app.post("/api/plants", data={'plant_database_id': 1,
+                                                      'slot_id': 1})
+        self.assertEqual(json.loads(response.data), {
+           'name': "testPlant",
+           'photo_url': "testPlant.png",
+           'light': {
+               'current': 0.0,
+               'ideal': 50.0,
+               'tolerance': 10.0,
+           },
+           'water': {
+               'current': 0.0,
+               'ideal': 57.0,
+               'tolerance': 30.0,
+           },
+           'humidity': {
+               'current': 0.0,
+               'ideal': 0.2,
+               'tolerance': 0.1,
+           },
+           'temperature': {
+               'current': 0.0,
+               'ideal': 11.2,
+               'tolerance': 15.3,
+           },
+           'mature_on': 'Sun, 10 Jan 2016 00:00:00 GMT',
+           'slot_id': 1,
+           'plant_database_id': 1,
+        })
+
+    @mock.patch("app.webservice.models.PlantDatabase")
+    def test_successful_create_saves_plant(self, PlantDatabase):
+        self.assertEqual(len(webservice.models.Plant), 0)
+        PlantDatabase.find_plant.return_value = build_plant()
+        self.app.post("/api/plants", data={'plant_database_id': 1,
+                                           'slot_id': 1})
+        self.assertEqual(len(webservice.models.Plant), 1)
+        self.assertEqual(webservice.models.Plant.first().plant_database_id, 1)
+        self.assertEqual(webservice.models.Plant.first().slot_id, 1)
+
+    @mock.patch("app.webservice.models.PlantDatabase")
+    def test_failed_create_does_not_save_plant(self, PlantDatabase):
+        PlantDatabase.find_plant.return_value = None
+        self.app.post("/api/plants", data={'plant_database_id': 1,
+                                           'slot_id': 1})
+        self.assertEqual(len(webservice.models.Plant), 0)
+
+    @mock.patch("app.webservice.models.PlantDatabase")
+    def test_failed_returns_error(self, PlantDatabase):
+        PlantDatabase.find_plant.return_value = None
+        response = self.app.post("/api/plants", data={'plant_database_id': 1,
+                                                      'slot_id': 1})
+        self.assertEqual(json.loads(response.data), {'error': 'could not save plant'})
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",
