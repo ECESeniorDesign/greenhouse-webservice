@@ -365,6 +365,22 @@ class APIPlantSettingsController(object):
         except:
             return ("{'error': 'setting not found'}", 404)
 
+@router.route("/api/plants/<plant_id>/logs", only=["index"])
+class APILogsController(object):
+
+    @staticmethod
+    def index(plant_id):
+        try:
+            plant = models.Plant.for_slot(plant_id)
+            data = {"id": plant.id}
+            # FIXME remove acidity
+            sensors = set(models.SensorDataPoint.SENSORS) - set(["acidity"])
+            for sensor in sensors:
+                data[sensor] = [s.sensor_value for s in getattr(plant.sensor_data_points, sensor)()]
+            return flask.jsonify(data)
+        except models.lazy_record.RecordNotFound:
+            return flask.jsonify({"error": "plant not found"})
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)
