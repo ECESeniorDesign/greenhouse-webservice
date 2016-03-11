@@ -2,6 +2,7 @@ import unittest
 import mock
 import os
 import sys
+import json
 from datetime import datetime as dt, time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.webservice as webservice
@@ -549,6 +550,46 @@ class TestGlobalSettingsController(unittest.TestCase):
         gs_form.assert_called_with([control], flask.request.form)
         gs_form.return_value.submit.assert_called_with()
 
+class TestAPIPlantsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    def test_index_with_no_plants(self):
+        webservice.models.WaterLevel.create(level=51)
+        response = self.app.get("/api/plants")
+        self.assertEqual(json.loads(response.data), {
+           'plants': [],
+           'water_level': 51
+        })
+
+    def test_index_with_no_plants_and_no_water(self):
+        response = self.app.get("/api/plants")
+        self.assertEqual(json.loads(response.data), {
+           'plants': [],
+           'water_level': 0
+        })
+
+    def test_index_returns_plants(self):
+        webservice.models.WaterLevel.create(level=51)
+        build_plant().save()
+        response = self.app.get("/api/plants")
+        self.assertEqual(json.loads(response.data), {
+           'plants': [
+               {
+                   'name': "testPlant",
+                   'photo_url': "testPlant.png",
+                   'slot_id': 1,
+                   'plant_database_id': 1,
+               }
+           ],
+           'water_level': 51
+        })
 
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",

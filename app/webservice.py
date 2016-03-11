@@ -267,6 +267,28 @@ def login():
 
 router.root(PlantsController, "index")
 
+# API
+
+@router.route("/api/plants", only=["index"])
+class APIPlantsController(object):
+
+    @staticmethod
+    def index():
+        water = models.WaterLevel.last()
+        if water:
+            level = water.level
+        else:
+            level = 0
+        plants = []
+        for plant in models.Plant.all():
+            plants.append({
+                'name': plant.name,
+                'slot_id': plant.slot_id,
+                'photo_url': plant.photo_url,
+                'plant_database_id': plant.plant_database_id,
+            })
+        return flask.jsonify({'plants': plants, 'water_level': level})
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)
