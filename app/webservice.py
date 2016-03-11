@@ -303,6 +303,24 @@ class APIPlantsController(object):
         else:
             return flask.jsonify({'error': 'could not save plant'})
 
+@router.route("/api/plants/<plant_id>/settings", only=["index"])
+class APIPlantSettingsController(object):
+
+    @staticmethod
+    def index(plant_id):
+        plant = models.Plant.for_slot(plant_id, False)
+        if plant:
+            response = {'settings': []}
+            for threshold in plant.plant_setting.notification_thresholds:
+                response['settings'].append({
+                    'sensor_name': threshold.sensor_name,
+                    'deviation_percent': threshold.deviation_percent,
+                    'deviation_time': threshold.deviation_time
+                })
+            return flask.jsonify(response)
+        else:
+            return flask.jsonify({"error": "plant not found"})
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)

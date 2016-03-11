@@ -689,6 +689,52 @@ class TestAPIPlantsController(unittest.TestCase):
                                                       'slot_id': 1})
         self.assertEqual(json.loads(response.data), {'error': 'could not save plant'})
 
+class TestAPIPlantSettingsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+        self.plant = create_plant(slot_id=1)
+        self.setting = webservice.models.PlantSetting.create(plant=self.plant)
+        self.threshold = webservice.models.NotificationThreshold.create(
+                             plant_setting=self.setting,
+                             sensor_name="light",
+                             deviation_percent=15,
+                             deviation_time=3)
+
+    def test_get_shows_existing_settings(self):
+        response = self.app.get("/api/plants/1/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'settings': [
+                {
+                    'sensor_name': "light",
+                    'deviation_time': 3,
+                    'deviation_percent': 15
+                }
+            ]
+        })
+
+    def test_get_shows_no_settings_if_none(self):
+        self.threshold.destroy()
+        response = self.app.get("/api/plants/1/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'settings': []
+        })
+
+    def test_get_shows_nothing_if_no_plant(self):
+        self.plant.destroy()
+        response = self.app.get("/api/plants/1/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'error': 'plant not found'
+        })
+
 
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
