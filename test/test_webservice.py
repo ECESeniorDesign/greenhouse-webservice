@@ -712,6 +712,7 @@ class TestAPIPlantSettingsController(unittest.TestCase):
         self.assertEqual(json.loads(response.data), {
             'settings': [
                 {
+                    'id': 1,
                     'sensor_name': "light",
                     'deviation_time': 3,
                     'deviation_percent': 15
@@ -735,6 +736,34 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             'error': 'plant not found'
         })
 
+    def test_post_creates_new_setting(self):
+        response = self.app.post("/api/plants/1/settings", data={
+            'sensor_name': 'light',
+            'deviation_time': 5,
+            'deviation_percent': 5,
+            'row': 1
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'id': 2,
+            'row': 1,
+            'sensor_name': 'light',
+            'deviation_time': 5,
+            'deviation_percent': 5
+        })
+
+    def test_create_returns_error_if_no_plant(self):
+        self.plant.destroy()
+        response = self.app.post("/api/plants/1/settings", data={
+            'sensor_name': 'light',
+            'deviation_time': 5,
+            'deviation_percent': 5,
+            'row': 1
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'error': 'plant not found'
+        })
 
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
