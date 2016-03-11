@@ -276,6 +276,57 @@ class TestChartDataPresenter(unittest.TestCase):
             },
         ])
 
+class TestAPIPlantPresenter(unittest.TestCase):
+
+    def setUp(self):
+        self.presenter = presenters.APIPlantPresenter(plant())
+
+    def test_gives_short_info(self):
+        self.assertEqual(self.presenter.short_info(),
+                         {
+                             'name': "testPlant",
+                             'photo_url': "testPlant.png",
+                             'slot_id': 1,
+                             'plant_database_id': 1
+                         })
+
+    def test_gives_long_info(self):
+        self.assertEqual(self.presenter.long_info(),
+                         {
+                             'name': "testPlant",
+                             'photo_url': "testPlant.png",
+                             'light': {
+                                 'current': 56.0,
+                                 'ideal': 50.0,
+                                 'tolerance': 10.0,
+                             },
+                             'water': {
+                                 'current': 80.0,
+                                 'ideal': 100.0,
+                                 'tolerance': 30.0,
+                             },
+                             'humidity': {
+                                 'current': 0.27,
+                                 'ideal': 0.2,
+                                 'tolerance': 0.1,
+                             },
+                             'temperature': {
+                                 'current': 71.3,
+                                 'ideal': 68.2,
+                                 'tolerance': 11.2,
+                             },
+                             'mature_on': dt(2016, 1, 10),
+                             'slot_id': 1,
+                             'plant_database_id': 1,
+                         })
+
+    def test_gives_short_info_for_no_plant(self):
+        info = presenters.APIPlantPresenter(None).short_info()
+        self.assertEqual(info, {})
+
+    def test_gives_long_info_for_no_plant(self):
+        info = presenters.APIPlantPresenter(None).long_info()
+        self.assertEqual(info, {})
 
 def plant(**kwargs):
     p = mock.Mock(photo_url="testPlant.png",

@@ -175,3 +175,52 @@ class ChartDataPresenter(object):
                                     }
                                 ]
                 }
+
+
+class APIPlantPresenter(object):
+
+    def __init__(self, plant):
+        self.plant = plant
+
+    def short_info(self):
+        if self.plant:
+            return {
+                'name': self.plant.name,
+                'slot_id': self.plant.slot_id,
+                'photo_url': self.plant.photo_url,
+                'plant_database_id': self.plant.plant_database_id,
+            }
+        else:
+            return {}
+
+    def long_info(self):
+        if self.plant:
+            return {
+                'name': self.plant.name,
+                'light': {
+                    'ideal': self.plant.light_ideal,
+                    'tolerance': self.plant.light_tolerance,
+                    'current': self.plant.light
+                },
+                'water': {
+                    'ideal': self.plant.water_ideal,
+                    'tolerance': self.plant.water_tolerance,
+                    'current': self.plant.water
+                },
+                'humidity': {
+                    'ideal': self.plant.humidity_ideal,
+                    'tolerance': self.plant.humidity_tolerance,
+                    'current': self.plant.humidity
+                },
+                'temperature': {
+                    'ideal': self.plant.temperature_ideal,
+                    'tolerance': self.plant.temperature_tolerance,
+                    'current': self.plant.temperature
+                },
+                'mature_on': self.plant.mature_on,
+                'slot_id': self.plant.slot_id,
+                'photo_url': self.plant.photo_url,
+                'plant_database_id': self.plant.plant_database_id,
+            }
+        else:
+            return {}
