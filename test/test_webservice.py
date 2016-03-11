@@ -807,6 +807,16 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             'error': 'setting invalid'
         })
 
+    def test_delete_deletes_setting(self):
+        response = self.app.delete("/api/plants/1/settings/1")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(webservice.models.NotificationThreshold), 0)
+
+    def test_delete_error_if_no_setting(self):
+        response = self.app.delete("/api/plants/1/settings/2")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(len(webservice.models.NotificationThreshold), 1)
+
 
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",

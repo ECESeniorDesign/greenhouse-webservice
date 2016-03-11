@@ -303,7 +303,7 @@ class APIPlantsController(object):
         else:
             return flask.jsonify({'error': 'could not save plant'})
 
-@router.route("/api/plants/<plant_id>/settings", only=["index", "create", "update"])
+@router.route("/api/plants/<plant_id>/settings", only=["index", "create", "update", "destroy"])
 class APIPlantSettingsController(object):
 
     @staticmethod
@@ -355,6 +355,15 @@ class APIPlantSettingsController(object):
             return flask.jsonify({"error": "setting not found"})
         except models.lazy_record.RecordInvalid:
             return flask.jsonify({"error": "setting invalid"})
+
+    @staticmethod
+    def destroy(plant_id, id):
+        try:
+            setting = models.NotificationThreshold.find(id)
+            setting.destroy()
+            return ('', 200)
+        except:
+            return ("{'error': 'setting not found'}", 404)
 
 # Error Recovery
 
