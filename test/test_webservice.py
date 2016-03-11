@@ -765,6 +765,49 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             'error': 'plant not found'
         })
 
+    def test_update_edits_existing_settings(self):
+        response = self.app.post("/api/plants/1/settings/1", data={
+            'sensor_name': 'light',
+            'deviation_time': 5,
+            'deviation_percent': 50,
+            'row': 1
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'row': 1,
+            'sensor_name': 'light',
+            'deviation_time': 5,
+            'deviation_percent': 50
+        })
+        self.assertEqual(
+            webservice.models.NotificationThreshold.first().deviation_percent,
+            50.0)
+
+    def test_update_errors_if_no_setting(self):
+        response = self.app.post("/api/plants/1/settings/2", data={
+            'sensor_name': 'light',
+            'deviation_time': 5,
+            'deviation_percent': 5,
+            'row': 1
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'error': 'setting not found'
+        })
+
+    def test_update_errors_if_invalid(self):
+        response = self.app.post("/api/plants/1/settings/1", data={
+            'sensor_name': 'light',
+            'deviation_time': 0,
+            'deviation_percent': 5,
+            'row': 1
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'error': 'setting invalid'
+        })
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",
