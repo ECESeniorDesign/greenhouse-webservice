@@ -381,6 +381,32 @@ class APILogsController(object):
         except models.lazy_record.RecordNotFound:
             return flask.jsonify({"error": "plant not found"})
 
+
+@router.route("/api/settings", only=["index", "update"])
+class APIGlobalSettingsController(object):
+
+    @staticmethod
+    def index():
+        def present_time(time):
+            if time is None:
+                return None
+            else:
+                time = datetime.datetime.combine(datetime.date.today(),
+                                                 time)
+                return time.strftime("%X")
+
+        controls = models.GlobalSetting.controls
+        return flask.jsonify({
+            control.name : {
+                'enabled': control.enabled is not False,
+                'id': control.id,
+                'active': control.active,
+                'active_start': present_time(control.active_start),
+                'active_end': present_time(control.active_end),
+            }
+            for control in controls
+        })
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)

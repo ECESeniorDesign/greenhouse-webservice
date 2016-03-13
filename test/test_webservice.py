@@ -851,6 +851,102 @@ class TestAPILogsController(unittest.TestCase):
                          {"error": "plant not found"})
 
 
+@mock.patch("app.webservice.models.GlobalSetting")
+class TestAPIGlobalSettingsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    def test_index_returns_current_settings(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        response = self.app.get("/api/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'fan': {
+                'enabled': True,
+                'id': 1,
+                'active': False,
+                'active_start': "00:12:30",
+                'active_end': "01:11:15"
+            }
+        })
+
+    def test_index_returns_with_always_active(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            id=1,
+                            enabled=True,
+                            active=False,
+                            active_start=None,
+                            active_end=None)
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        response = self.app.get("/api/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'fan': {
+                'enabled': True,
+                'id': 1,
+                'active': False,
+                'active_start': None,
+                'active_end': None
+            }
+        })
+
+    def test_index_returns_with_temp_disabled(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=webservice.models.Control.TemporarilyDisabled,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        response = self.app.get("/api/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'fan': {
+                'enabled': True,
+                'id': 1,
+                'active': False,
+                'active_start': "00:12:30",
+                'active_end': "01:11:15"
+            }
+        })
+
+    def test_index_returns_with_disabled(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=False,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        control.name = "fan"
+        GlobalSetting.controls = [control]
+        response = self.app.get("/api/settings")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {
+            'fan': {
+                'enabled': False,
+                'active': False,
+                'id': 1,
+                'active_start': "00:12:30",
+                'active_end': "01:11:15"
+            }
+        })
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",
