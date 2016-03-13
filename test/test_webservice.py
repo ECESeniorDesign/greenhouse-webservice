@@ -946,6 +946,57 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
             }
         })
 
+    def test_update_edits_status(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data={
+            'enabled': False,
+            'active': False,
+            'active_start': "00:12:30",
+            'active_end': "01:11:15"
+        })
+        self.assertEqual(response.status_code, 200)
+        control.update.assert_called_with(enabled=False,
+                                          active_start=time(0, 12, 30),
+                                          active_end=time(1, 11, 15))
+        control.save.assert_called_with()
+
+    def test_errors_if_cannot_find_control(self, GlobalSetting):
+        GlobalSetting.controls.find.side_effect = \
+            webservice.models.lazy_record.RecordNotFound
+        response = self.app.post("/api/settings/1", data={
+            'enabled': False,
+            'active': False,
+            'active_start': "00:12:30",
+            'active_end': "01:11:15"
+        })
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_edits_timestamp(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data={
+            'enabled': False,
+            'active': False,
+            'active_start': None,
+            'active_end': None
+        })
+        self.assertEqual(response.status_code, 200)
+        control.update.assert_called_with(enabled=False,
+                                          active_start=None,
+                                          active_end=None)
+        control.save.assert_called_with()
+
 
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",

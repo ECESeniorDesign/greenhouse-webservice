@@ -407,6 +407,27 @@ class APIGlobalSettingsController(object):
             for control in controls
         })
 
+    @staticmethod
+    def update(id):
+        def get_time(time):
+            if time is None:
+                return None
+            h, m, s = map(int, time.split(":"))
+            return datetime.time(h, m, s)
+        try:
+            control = models.GlobalSetting.controls.find(id)
+            params = flask.request.form
+            enabled = True if params['enabled'] == 'True' else False
+            active_start = params.get('active_start', None)
+            active_end = params.get('active_end', None)
+            control.update(enabled=enabled,
+                           active_start=get_time(active_start),
+                           active_end=get_time(active_end))
+            control.save()
+            return ('', 200)
+        except models.lazy_record.RecordNotFound:
+            return ('', 404)
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)
