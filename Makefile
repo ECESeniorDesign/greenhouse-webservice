@@ -1,4 +1,4 @@
-.PHONY: install db
+.PHONY: install db server console production
 
 install: requirements.txt
 	pip install -r requirements.txt
@@ -12,3 +12,6 @@ server:
 
 console:
 	python -i setup.py console
+
+production:
+	python setup.py production

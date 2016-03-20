@@ -4,7 +4,7 @@ import lazy_record
 import app.models as models
 import app.webservice
 import app.seeds
-from app.lib.coffee import coffee
+import app.lib.coffee as coffee
 
 def main():
     if sys.argv[1] == "db":
@@ -17,11 +17,21 @@ def main():
         import mock
         app.webservice.models.services.ControlCluster.bus = mock.Mock(
             name="bus")
-        coffee(app.webservice.app)
+        coffee.livecompile(app.webservice.app)
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
         app.webservice.run()
     elif sys.argv[1] == "console":
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
+    elif sys.argv[1] == "production":
+        # Remove this for production
+        import mock
+        app.webservice.models.services.ControlCluster.bus = mock.Mock(
+            name="bus")
+
+        app.webservice.models.lazy_record.connect_db(config.DATABASE)
+        coffee.precompile(app.webservice.app)
+        app.webservice.config.DEBUG = False
+        app.webservice.run()
 
 if __name__ == '__main__':
     main()

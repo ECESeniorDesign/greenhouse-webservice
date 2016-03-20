@@ -519,31 +519,30 @@ def load_sensor_data():
 @background.task
 def create_sensor_data(): # pragma: no cover
     import random
-    if config.DEBUG:
-        sun = [25] * config.NUMBER_OF_PLANTS
-        water = [20] * config.NUMBER_OF_PLANTS
-        pH = [8.1] * config.NUMBER_OF_PLANTS
-        humidity = [0.67] * config.NUMBER_OF_PLANTS
-        temperature = [87.1] * config.NUMBER_OF_PLANTS
-        models.WaterLevel.create(level=52)
-        for i in range(config.NUMBER_OF_PLANTS):
-            sun[i] += random.randint(-5, 5)
-            sun[i] = min(max(sun[i], 0), 100)
-            water[i] += random.randint(-5, 5)
-            water[i] = min(max(water[i], 0), 100)
-            temperature[i] += random.uniform(-5, 5)
-            temperature[i] = min(max(temperature[i], 0), 100)
-            humidity[i] = random.random()
-            pH[i] = random.random() * 14
-        plants = [models.Plant.for_slot(slot_id, False)
-                  for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
-        for index, plant in enumerate(plants):
-            if plant:
-                plant.record_sensor("light", sun[index])
-                plant.record_sensor("water", water[index])
-                plant.record_sensor("humidity", humidity[index])
-                plant.record_sensor("acidity", pH[index])
-                plant.record_sensor("temperature", temperature[index])
+    sun = [25] * config.NUMBER_OF_PLANTS
+    water = [20] * config.NUMBER_OF_PLANTS
+    pH = [8.1] * config.NUMBER_OF_PLANTS
+    humidity = [0.67] * config.NUMBER_OF_PLANTS
+    temperature = [87.1] * config.NUMBER_OF_PLANTS
+    models.WaterLevel.create(level=52)
+    for i in range(config.NUMBER_OF_PLANTS):
+        sun[i] += random.randint(-5, 5)
+        sun[i] = min(max(sun[i], 0), 100)
+        water[i] += random.randint(-5, 5)
+        water[i] = min(max(water[i], 0), 100)
+        temperature[i] += random.uniform(-5, 5)
+        temperature[i] = min(max(temperature[i], 0), 100)
+        humidity[i] = random.random()
+        pH[i] = random.random() * 14
+    plants = [models.Plant.for_slot(slot_id, False)
+              for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
+    for index, plant in enumerate(plants):
+        if plant:
+            plant.record_sensor("light", sun[index])
+            plant.record_sensor("water", water[index])
+            plant.record_sensor("humidity", humidity[index])
+            plant.record_sensor("acidity", pH[index])
+            plant.record_sensor("temperature", temperature[index])
 
 @background.task
 def notify_plant_condition(): # pragma: no cover
