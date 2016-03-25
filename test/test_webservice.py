@@ -674,6 +674,7 @@ class TestAPIPlantsController(unittest.TestCase):
         self.assertEqual(len(webservice.models.Plant), 1)
         self.assertEqual(webservice.models.Plant.first().plant_database_id, 1)
         self.assertEqual(webservice.models.Plant.first().slot_id, 1)
+        self.assertNotEqual(webservice.models.Plant.first().plant_setting, None)
 
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_failed_create_does_not_save_plant(self, PlantDatabase):

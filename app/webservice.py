@@ -298,6 +298,7 @@ class APIPlantsController(object):
         plant = models.PlantDatabase.find_plant(plant_database_id)
         if plant:
             plant.slot_id = slot_id
+            plant.plant_setting = models.PlantSetting()
             plant.save()
             return flask.jsonify(presenters.APIPlantPresenter(plant).long_info())
         else:

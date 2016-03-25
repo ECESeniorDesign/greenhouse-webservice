@@ -55,6 +55,11 @@
   vertical-align: initial;
 }
 
+.plant-image {
+  width: 400px;
+  height: 400px;
+}
+
 .new-plant-thumbnail {
   display: flex;
   align-items: center;
