@@ -269,7 +269,7 @@ router.root(PlantsController, "index")
 
 # API
 
-@router.route("/api/plants", only=["index", "show", "create"])
+@router.route("/api/plants", only=["index", "show", "create", "destroy"])
 class APIPlantsController(object):
 
     @staticmethod
@@ -303,6 +303,15 @@ class APIPlantsController(object):
             return flask.jsonify(presenters.APIPlantPresenter(plant).long_info())
         else:
             return flask.jsonify({'error': 'could not save plant'})
+
+    @staticmethod
+    def destroy(id):
+        try:
+            plant = models.Plant.for_slot(id)
+            plant.destroy()
+            return ('', 204)
+        except models.lazy_record.RecordNotFound:
+            return ('Plant not found', 404)
 
 @router.route("/api/plants/<plant_id>/settings", only=["index", "create", "update", "destroy"])
 class APIPlantSettingsController(object):

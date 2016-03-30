@@ -690,6 +690,20 @@ class TestAPIPlantsController(unittest.TestCase):
                                                       'slot_id': 1})
         self.assertEqual(json.loads(response.data), {'error': 'could not save plant'})
 
+    def test_delete_removes_plant(self):
+        plant = build_plant()
+        plant.save()
+        response = self.app.delete("/api/plants/1")
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(len(webservice.models.Plant), 0)
+
+    def test_delete_with_no_plant_404(self):
+        plant = build_plant()
+        plant.save()
+        response = self.app.delete("/api/plants/2")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(len(webservice.models.Plant), 1)
+
 class TestAPIPlantSettingsController(unittest.TestCase):
 
     def setUp(self):
