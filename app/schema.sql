@@ -7,8 +7,6 @@ create table plants (
   water_tolerance real not null,
   light_ideal real not null,
   light_tolerance real not null,
-  acidity_ideal real not null,
-  acidity_tolerance real not null,
   humidity_ideal real not null,
   humidity_tolerance real not null,
   temperature_ideal real not null,

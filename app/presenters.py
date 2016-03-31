@@ -119,10 +119,6 @@ class ChartDataPresenter(object):
             "color": "#F7464A",
             "highlight": "#FF5A5E",
         },
-        "acidity": {
-            "color": "#46BFBD",
-            "highlight": "#5AD3D1",
-        },
         "default": {
             "color": "#949FB1",
             "highlight": "#A8B3C5",

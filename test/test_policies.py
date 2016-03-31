@@ -369,8 +369,6 @@ def plant():
                         water_tolerance=30.0,
                         light_ideal=50.0,
                         light_tolerance=10.0,
-                        acidity_ideal=9.0,
-                        acidity_tolerance=1.0,
                         humidity_ideal=0.2,
                         humidity_tolerance=0.1,
                         mature_on=dt(2016, 1, 10),

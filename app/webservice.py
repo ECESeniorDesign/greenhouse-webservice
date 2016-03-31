@@ -383,8 +383,7 @@ class APILogsController(object):
         try:
             plant = models.Plant.for_slot(plant_id)
             data = {"id": plant.id}
-            # FIXME remove acidity
-            sensors = set(models.SensorDataPoint.SENSORS) - set(["acidity"])
+            sensors = set(models.SensorDataPoint.SENSORS)
             for sensor in sensors:
                 data[sensor] = [s.sensor_value for s in getattr(plant.sensor_data_points, sensor)()]
             return flask.jsonify(data)
@@ -506,10 +505,6 @@ def send_data_to_client(slot_id):
             'within-tolerance': presenter.within_tolerance('humidity'),
             'value': presenter.formatted_value('humidity'),
         },
-        'acidity': {
-            'within-tolerance': presenter.within_tolerance('acidity'),
-            'value': presenter.formatted_value('acidity'),
-        },
         'temperature': {
             'within-tolerance': presenter.within_tolerance('temperature'),
             'value': presenter.formatted_value('temperature'),
@@ -541,7 +536,6 @@ def create_sensor_data(): # pragma: no cover
     import random
     sun = [25] * config.NUMBER_OF_PLANTS
     water = [20] * config.NUMBER_OF_PLANTS
-    pH = [8.1] * config.NUMBER_OF_PLANTS
     humidity = [0.67] * config.NUMBER_OF_PLANTS
     temperature = [87.1] * config.NUMBER_OF_PLANTS
     models.WaterLevel.create(level=52)
@@ -553,7 +547,6 @@ def create_sensor_data(): # pragma: no cover
         temperature[i] += random.uniform(-5, 5)
         temperature[i] = min(max(temperature[i], 0), 100)
         humidity[i] = random.random()
-        pH[i] = random.random() * 14
     plants = [models.Plant.for_slot(slot_id, False)
               for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
     for index, plant in enumerate(plants):
@@ -561,7 +554,6 @@ def create_sensor_data(): # pragma: no cover
             plant.record_sensor("light", sun[index])
             plant.record_sensor("water", water[index])
             plant.record_sensor("humidity", humidity[index])
-            plant.record_sensor("acidity", pH[index])
             plant.record_sensor("temperature", temperature[index])
 
 @background.task

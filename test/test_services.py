@@ -109,8 +109,6 @@ class TestPlantUpdater(unittest.TestCase):
             "plant_database_id": 1,
             "humidity_tolerance": 0.01,
             "humidity_ideal": 0.2,
-            "acidity_tolerance": 1.0,
-            "acidity_ideal": 9.0
         }
         plant_params.return_value = plant_data
         self.updater.update()

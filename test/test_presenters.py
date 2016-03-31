@@ -173,11 +173,6 @@ class TestChartDataPresenter(unittest.TestCase):
                 return_value=mock.Mock(where=mock.Mock(
                 return_value=mock.Mock(__len__=mock.Mock(
                 return_value=17))), __len__=mock.Mock(
-                return_value=19))),
-            acidity=mock.Mock(
-                return_value=mock.Mock(where=mock.Mock(
-                return_value=mock.Mock(__len__=mock.Mock(
-                return_value=14))), __len__=mock.Mock(
                 return_value=19))))
         presenter = presenters.ChartDataPresenter(p)
         self.assertEqual(presenter.ideal_chart_data(), [
@@ -198,12 +193,6 @@ class TestChartDataPresenter(unittest.TestCase):
                 "value": 95,
                 "color": "#949FB1",
                 "highlight": "#A8B3C5",
-            },
-            {
-                "label": "Acidity",
-                "value": 74,
-                "color": "#46BFBD",
-                "highlight": "#5AD3D1",
             },
             {
                 "label": "Temperature",
@@ -236,11 +225,6 @@ class TestChartDataPresenter(unittest.TestCase):
                 return_value=mock.Mock(where=mock.Mock(
                 return_value=mock.Mock(__len__=mock.Mock(
                 return_value=0))), __len__=mock.Mock(
-                return_value=0))),
-            acidity=mock.Mock(
-                return_value=mock.Mock(where=mock.Mock(
-                return_value=mock.Mock(__len__=mock.Mock(
-                return_value=0))), __len__=mock.Mock(
                 return_value=0))))
         presenter = presenters.ChartDataPresenter(p)
         self.assertEqual(presenter.ideal_chart_data(), [
@@ -261,12 +245,6 @@ class TestChartDataPresenter(unittest.TestCase):
                 "value": 0,
                 "color": "#949FB1",
                 "highlight": "#A8B3C5",
-            },
-            {
-                "label": "Acidity",
-                "value": 0,
-                "color": "#46BFBD",
-                "highlight": "#5AD3D1",
             },
             {
                 "label": "Temperature",
@@ -336,9 +314,6 @@ def plant(**kwargs):
                   light=56.0,
                   light_ideal=50.0,
                   light_tolerance=10.0,
-                  acidity=9.2,
-                  acidity_ideal=9.0,
-                  acidity_tolerance=1.0,
                   humidity=0.27,
                   humidity_ideal=0.2,
                   humidity_tolerance=0.1,

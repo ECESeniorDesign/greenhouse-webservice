@@ -125,18 +125,6 @@ class TestPlant(unittest.TestCase):
         plant.save()
         self.assertEqual(plant.humidity, 0)
 
-    def test_gets_current_acidity_data(self):
-        plant = plant_fixture()
-        plant.save()
-        plant.sensor_data_points.build(sensor_name="acidity",
-                                       sensor_value=15).save()
-        self.assertEqual(plant.acidity, 15)
-
-    def test_returns_0_with_no_acidity_data(self):
-        plant = plant_fixture()
-        plant.save()
-        self.assertEqual(plant.acidity, 0)
-
     def test_raises_attribute_error_on_bad_access(self):
         with self.assertRaises(AttributeError):
             plant_fixture().asfasdfsadfas
@@ -697,8 +685,6 @@ def plant_json():
                "plant_database_id": 1,
                "humidity_tolerance": 0.01,
                "humidity_ideal": 0.2,
-               "acidity_tolerance": 1.0,
-               "acidity_ideal": 9.0
            }
 
 
@@ -709,8 +695,6 @@ def plant_fixture():
                         water_tolerance=30.0,
                         light_ideal=50.0,
                         light_tolerance=10.0,
-                        acidity_ideal=9.0,
-                        acidity_tolerance=1.0,
                         temperature_ideal=55.5,
                         temperature_tolerance=11.3,
                         humidity_ideal=0.2,

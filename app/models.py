@@ -22,8 +22,6 @@ class Plant(lazy_record.Base):
         "light_tolerance": float,
         "temperature_ideal": float,
         "temperature_tolerance": float,
-        "acidity_ideal": float,
-        "acidity_tolerance": float,
         "humidity_ideal": float,
         "humidity_tolerance": float,
         "mature_on": lazy_record.datetime,
@@ -90,7 +88,6 @@ class SensorDataPoint(lazy_record.Base):
         "water",
         "light",
         "humidity",
-        "acidity",
         "temperature",
     )
 

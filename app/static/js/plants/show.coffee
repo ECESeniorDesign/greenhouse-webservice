@@ -31,7 +31,6 @@ $ ->
   plant_socket.on 'new-data', (data) ->
     update_bar(data['light'])
     update_bar(data['water'])
-    update_vitalinfo('acidity', data['acidity'])
     update_vitalinfo('humidity', data['humidity'])
     update_vitalinfo('temperature', data['temperature'])
     return
