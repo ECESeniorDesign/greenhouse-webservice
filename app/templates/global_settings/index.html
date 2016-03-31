@@ -69,11 +69,11 @@
       <div class="control-row">
         <div class="form-group">
           <label class="setting-label">Push</label>
-          <input type="checkbox" name="push" checked>
+            <input type="checkbox" name="push" {% if notification_settings["push"] %}checked{% endif %}>
         </div>
         <div class="form-group">
           <label class="setting-label">Email</label>
-          <input type="checkbox" name="email" checked>
+          <input type="checkbox" name="email" {% if notification_settings["email"] %}checked{% endif %}>
         </div>
       </div>
       <button type="submit" class="btn btn-default">Submit</button>

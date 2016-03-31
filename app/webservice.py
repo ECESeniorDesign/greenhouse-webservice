@@ -241,8 +241,10 @@ class GlobalSettingsController(object):
     @staticmethod
     def index():
         controls = models.GlobalSetting.controls
+        ns = models.PlantDatabase.get_notification_settings()
         return flask.render_template("global_settings/index.html",
-                                     controls=controls)
+                                     controls=controls,
+                                     notification_settings=ns)
 
     @staticmethod
     def create():

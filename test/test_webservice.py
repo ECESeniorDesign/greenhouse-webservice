@@ -500,9 +500,13 @@ class TestGlobalSettingsController(unittest.TestCase):
         with open(SCHEMA) as schema:
             webservice.models.lazy_record.load_schema(schema.read())
 
+    @mock.patch(
+        "app.webservice.models.PlantDatabase.get_notification_settings")
     @mock.patch("app.webservice.models.GlobalSetting")
     @mock.patch("app.webservice.flask.render_template")
-    def test_index_renders_form(self, render_template, GlobalSetting):
+    def test_index_renders_form(self, render_template, GlobalSetting, gns):
+        ns = {'email': True, 'push': False}
+        gns.return_value = ns
         control = mock.Mock(name="control",
                             enabled=True,
                             active_during=(
@@ -512,10 +516,13 @@ class TestGlobalSettingsController(unittest.TestCase):
         GlobalSetting.controls = [control]
         self.app.get("/settings")
         render_template.assert_called_with("global_settings/index.html",
-                                           controls=[control])
+                                           controls=[control],
+                                           notification_settings=ns)
 
+    @mock.patch(
+        "app.webservice.models.PlantDatabase.get_notification_settings")
     @mock.patch("app.webservice.models.GlobalSetting")
-    def test_index_returns_200_status_code(self, GlobalSetting):
+    def test_index_returns_200_status_code(self, GlobalSetting, gns):
         GlobalSetting.controls = []
         response = self.app.get("/settings")
         self.assertEqual(response.status_code, 200)
