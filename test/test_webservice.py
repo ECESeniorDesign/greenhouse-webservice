@@ -1031,7 +1031,6 @@ class TestAPIDevicesController(unittest.TestCase):
         PlantDatabase.add_device.assert_called_with("DEVICEID")
 
 
-@mock.patch("app.webservice.models.PlantDatabase")
 class TestAPINotificationSettingsController(unittest.TestCase):
 
     def setUp(self):
@@ -1042,6 +1041,25 @@ class TestAPINotificationSettingsController(unittest.TestCase):
         with open(SCHEMA) as schema:
             webservice.models.lazy_record.load_schema(schema.read())
 
+    @mock.patch("app.webservice.models.PlantDatabase")
+    def test_gets_settings_from_plant_database(self, PlantDatabase):
+        PlantDatabase.get_notification_settings.return_value = {'email': True,
+                                                                'push': False}
+        response = self.app.get("/api/notification_settings")
+        self.assertEqual(response.status_code, 200)
+        PlantDatabase.get_notification_settings.assert_called_with()
+        self.assertEqual(json.loads(response.data),
+                         {'email': True, 'push': False})
+
+    @mock.patch(
+        "app.webservice.models.PlantDatabase.get_notification_settings")
+    def test_gets_settings_404s_on_error(self, get_notification_settings):
+        get_notification_settings.side_effect = \
+            webservice.models.PlantDatabase.CannotConnect
+        response = self.app.get("/api/notification_settings")
+        self.assertEqual(response.status_code, 404)
+
+    @mock.patch("app.webservice.models.PlantDatabase")
     def test_sends_settings_to_plant_database(self, PlantDatabase):
         response = self.app.post("/api/notification_settings",
                                  data={"email": True, "push": False})

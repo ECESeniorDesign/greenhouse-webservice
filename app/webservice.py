@@ -448,8 +448,16 @@ class APIDevicesController(object):
         return '', 200
 
 
-@router.route("/api/notification_settings", only=["create"])
+@router.route("/api/notification_settings", only=["index", "create"])
 class APINotificationSettingsController(object):
+
+    @staticmethod
+    def index():
+        try:
+            settings = models.PlantDatabase.get_notification_settings()
+            return flask.jsonify(settings)
+        except:
+            return '', 404
 
     @staticmethod
     def create():

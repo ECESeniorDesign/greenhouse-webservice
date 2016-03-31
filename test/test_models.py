@@ -2,6 +2,7 @@ import unittest
 import mock
 import os
 import sys
+import json
 from datetime import datetime as dt, time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import app.models as models
@@ -334,6 +335,38 @@ class TestPlantDatabase(unittest.TestCase):
         self.assertEqual(
             models.PlantDatabase.update_notification_settings(
             {'email': True, 'push': False}), None)
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_returns_notification_settings(self, post, Token):
+        Token.last.return_value = mock.Mock(name="token", token="TOKEN")
+        json_value = {'email': False, 'push': True}
+        post.return_value.content = json.dumps(json_value)
+        self.assertEqual(models.PlantDatabase.get_notification_settings(),
+                         json_value)
+        post.assert_called_with(
+            "http://PLANT_DATABASE/api/notification_settings",
+            json={"token": "TOKEN"})
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_get_notification_settings_raises_if_no_token(self, post, Token):
+        Token.last.return_value = None
+        json_value = {'email': False, 'push': True}
+        post.return_value.content = json.dumps(json_value)
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.PlantDatabase.get_notification_settings()
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_get_notification_settings_raises_no_connect(self, post, Token):
+        Token.last.return_value = mock.Mock(name="token", token="TOKEN")
+        post.side_effect = models.requests.exceptions.ConnectionError
+        with self.assertRaises(models.PlantDatabase.CannotConnect):
+            models.PlantDatabase.get_notification_settings()
 
 
 class TestSensorDataPoint(unittest.TestCase):
