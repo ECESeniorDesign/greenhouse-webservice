@@ -169,6 +169,14 @@ class PlantDatabase(object):
             raise PlantDatabase.CannotConnect(PLANT_DATABASE)
 
     @classmethod
+    def _post_request(PlantDatabase, url, params, error=lambda: None):
+        try:
+            requests.post("http://{}/{}".format(PLANT_DATABASE, url),
+                          json=params)
+        except requests.exceptions.ConnectionError:
+            error()
+
+    @classmethod
     def _process_list(PlantDatabase, plant_list):
         plant_args = (PlantDatabase._filter_params(params)
                       for params in plant_list)
@@ -212,12 +220,16 @@ class PlantDatabase(object):
         token = Token.last()
         if not token:
             return None
-        try:
-            requests.post("http://{}/api/devices".format(PLANT_DATABASE),
-                          json={"token": token.token, "device_id": device_id})
-        except requests.exceptions.ConnectionError:
-            pass
+        params = {"token": token.token, "device_id": device_id}
+        PlantDatabase._post_request("api/devices", params)
 
+    @classmethod
+    def update_notification_settings(PlantDatabase, settings):
+        token = Token.last()
+        if not token:
+            return None
+        params = dict(settings, token=token.token)
+        PlantDatabase._post_request("api/notification_settings", params)
 
 class Token(lazy_record.Base):
     __attributes__ = {

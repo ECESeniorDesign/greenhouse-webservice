@@ -26,7 +26,10 @@ $(document).ready ->
       play_button(play_pause)
       play_pause.addClass("disabled")
       fields.prop("disabled", true)
-      
+
+  $("input[name='push']").bootstrapSwitch()
+  $("input[name='email']").bootstrapSwitch()
+
   $("input.ui-timepicker-input").timepicker({ 'timeFormat': 'h:i A', 'forceRoundTime': true })
 
   namespace = "/settings"

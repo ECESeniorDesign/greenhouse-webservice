@@ -311,6 +311,43 @@ class TestPlantDatabase(unittest.TestCase):
         Token.last.return_value = None
         self.assertEqual(models.PlantDatabase.add_device("DEVICE_ID"), None)
 
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_update_notification_settings_calls_database(self, post, Token):
+        Token.last.return_value = mock.Mock(name="token", token="TOKEN")
+        models.PlantDatabase.update_notification_settings({'email': True,
+                                                           'push': False})
+        post.assert_called_with(
+            "http://PLANT_DATABASE/api/notification_settings",
+            json={"token": "TOKEN",
+                  "email": True,
+                  "push": False})
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_add_fails_silently_if_cannot_connect(self, post, Token):
+        post.side_effect = models.requests.exceptions.ConnectionError
+        Token.last.return_value = mock.Mock(name="token", token="TOKEN")
+        models.PlantDatabase.update_notification_settings({'email': True,
+                                                           'push': False})
+        post.assert_called_with(
+            "http://PLANT_DATABASE/api/notification_settings",
+            json={"token": "TOKEN",
+                  "email": True,
+                  "push": False})
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_add_fails_silently_if_no_token(self, post, Token):
+        Token.last.return_value = None
+        self.assertEqual(
+            models.PlantDatabase.update_notification_settings(
+            {'email': True, 'push': False}), None)
+
+
 class TestSensorDataPoint(unittest.TestCase):
 
     def setUp(self):

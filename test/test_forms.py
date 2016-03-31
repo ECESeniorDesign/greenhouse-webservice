@@ -14,7 +14,8 @@ class TestGlobalSettingsForm(unittest.TestCase):
         self.form_data = {'active_start': ['02:00 PM', ''],
                           'enabled': ['2', '1'],
                           'id': ['2', '1'],
-                          'active_end': ['01:30 AM', '']}
+                          'active_end': ['01:30 AM', ''],
+                          'push': 'on'}
         form_data = FormDataStub(self.form_data)
         self.form = forms.GlobalSettingsForm(self.controls, form_data)
 
@@ -29,6 +30,10 @@ class TestGlobalSettingsForm(unittest.TestCase):
                 'enabled': True,
                 'active_start': time(14, 0),
                 'active_end': time(1, 30)
+            },
+            'notifications': {
+                'push': True,
+                'email': False
             }
         })
 
@@ -47,6 +52,10 @@ class TestGlobalSettingsForm(unittest.TestCase):
                 'enabled': True,
                 'active_start': time(14, 0),
                 'active_end': time(1, 30)
+            },
+            'notifications': {
+                'push': True,
+                'email': False
             }
         })
 
@@ -63,11 +72,15 @@ class TestGlobalSettingsForm(unittest.TestCase):
                 'enabled': True,
                 'active_start': time(14, 0),
                 'active_end': time(0, 0)
+            },
+            'notifications': {
+                'push': True,
+                'email': False
             }
         })
 
-
-    def test_submit_saves_form(self):
+    @mock.patch("app.forms.models.PlantDatabase")
+    def test_submit_saves_form(self, PlantDatabase):
         self.form_data['enabled'] = ['2']
         self.form_data['active_start'] = ['02:00 PM']
         self.form_data['active_end'] = ['01:30 AM']
@@ -81,6 +94,13 @@ class TestGlobalSettingsForm(unittest.TestCase):
         self.controls[0].save.assert_called_with()
         self.controls[1].save.assert_called_with()
 
+    @mock.patch("app.forms.models.PlantDatabase")
+    def test_submit_updates_notification_settings(self, PlantDatabase):
+        self.form.submit()
+        PlantDatabase.update_notification_settings.assert_called_with({
+            'push': True,
+            'email': False
+        })
 
 class FormDataStub(object):
     def __init__(self, data):
@@ -89,6 +109,11 @@ class FormDataStub(object):
     def getlist(self, arg):
         return self.data[arg]
 
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def get(self, key, default=None):
+        return self.data.get(key, default)
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,6 +21,7 @@
       <h1>Greenhouse Settings</h1>
     </div>
     <form action="{{ url_for('GlobalSettingsController.create') }}" method="post">
+      <h2>Control Settings</h2>
       {% for control in controls %}
         <div class="control-row">
           <div class="form-inline">
@@ -64,6 +65,17 @@
           </div>
         </div>
       {% endfor %}
+      <h2>Notification Settings</h2>
+      <div class="control-row">
+        <div class="form-group">
+          <label class="setting-label">Push</label>
+          <input type="checkbox" name="push" checked>
+        </div>
+        <div class="form-group">
+          <label class="setting-label">Email</label>
+          <input type="checkbox" name="email" checked>
+        </div>
+      </div>
       <button type="submit" class="btn btn-default">Submit</button>
     </form>
   </div>

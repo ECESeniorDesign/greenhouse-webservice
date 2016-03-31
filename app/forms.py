@@ -1,4 +1,5 @@
 from datetime import time
+import models
 
 class GlobalSettingsForm(object):
 
@@ -8,13 +9,21 @@ class GlobalSettingsForm(object):
 
     @property
     def data(self):
-        return {control: self._data_for(control.id)
-                for control in self.controls}
+        def to_bool(onoff):
+            return onoff == "on"
+        controls = {control: self._data_for(control.id)
+                    for control in self.controls}
+        return dict(controls, notifications={
+            'push': to_bool(self.form_data.get("push")),
+            'email': to_bool(self.form_data.get("email"))})
 
     def submit(self):
         for control, data in self.data.items():
-            control.update(**data)
-            control.save()
+            if control == "notifications":
+                models.PlantDatabase.update_notification_settings(data)
+            else:
+                control.update(**data)
+                control.save()
 
     def _data_for(self, control_id):
         enabled = map(int, self.form_data.getlist('enabled'))
