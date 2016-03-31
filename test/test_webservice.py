@@ -1031,6 +1031,25 @@ class TestAPIDevicesController(unittest.TestCase):
         PlantDatabase.add_device.assert_called_with("DEVICEID")
 
 
+@mock.patch("app.webservice.models.PlantDatabase")
+class TestAPINotificationSettingsController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    def test_sends_settings_to_plant_database(self, PlantDatabase):
+        response = self.app.post("/api/notification_settings",
+                                 data={"email": True, "push": False})
+        self.assertEqual(response.status_code, 200)
+        PlantDatabase.update_notification_settings.assert_called_with(
+            {"email": True, "push": False})
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",

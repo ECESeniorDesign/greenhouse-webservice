@@ -447,6 +447,24 @@ class APIDevicesController(object):
         models.PlantDatabase.add_device(device_id)
         return '', 200
 
+
+@router.route("/api/notification_settings", only=["create"])
+class APINotificationSettingsController(object):
+
+    @staticmethod
+    def create():
+
+        def to_bool(string):
+            return string == 'True'
+
+        params = {
+            "push": to_bool(flask.request.form["push"]),
+            "email": to_bool(flask.request.form["email"]),
+        }
+        models.PlantDatabase.update_notification_settings(params)
+        return '', 200
+
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)
