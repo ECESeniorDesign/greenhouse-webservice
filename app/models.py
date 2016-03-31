@@ -207,6 +207,17 @@ class PlantDatabase(object):
         else:
             return None
 
+    @classmethod
+    def add_device(PlantDatabase, device_id):
+        token = Token.last()
+        if not token:
+            return None
+        try:
+            requests.post("http://{}/api/devices".format(PLANT_DATABASE),
+                          json={"token": token.token, "device_id": device_id})
+        except requests.exceptions.ConnectionError:
+            pass
+
 
 class Token(lazy_record.Base):
     __attributes__ = {

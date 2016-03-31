@@ -1013,6 +1013,24 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
         control.save.assert_called_with()
 
 
+@mock.patch("app.webservice.models.PlantDatabase")
+class TestAPIDevicesController(unittest.TestCase):
+
+    def setUp(self):
+        # create a test client
+        self.app = webservice.app.test_client()
+        self.app.testing = True
+        webservice.models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            webservice.models.lazy_record.load_schema(schema.read())
+
+    def test_sends_device_id_to_plant_database(self, PlantDatabase):
+        response = self.app.post("/api/devices",
+                                 data={"device_id": "<DEVICE ID>"})
+        self.assertEqual(response.status_code, 200)
+        PlantDatabase.add_device.assert_called_with("DEVICEID")
+
+
 def build_plant(slot_id=1):
     return webservice.models.Plant(name="testPlant",
                                    photo_url="testPlant.png",

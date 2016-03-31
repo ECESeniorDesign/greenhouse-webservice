@@ -438,6 +438,16 @@ class APIGlobalSettingsController(object):
         except models.lazy_record.RecordNotFound:
             return ('', 404)
 
+@router.route("/api/devices", only=["create"])
+class APIDevicesController(object):
+
+    @staticmethod
+    def create():
+        params = flask.request.form
+        device_id = "".join(params["device_id"][1:-1].split())
+        models.PlantDatabase.add_device(device_id)
+        return '', 200
+
 # Error Recovery
 
 @app.errorhandler(models.lazy_record.RecordNotFound)
@@ -586,4 +596,4 @@ def updated_plants(): # pragma: no cover
 def run(): # pragma: no cover
     background.run()
     daily.run()
-    socketio.run(app, debug=config.DEBUG)
+    socketio.run(app, debug=config.DEBUG, host="0.0.0.0")

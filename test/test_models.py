@@ -283,6 +283,33 @@ class TestPlantDatabase(unittest.TestCase):
         with self.assertRaises(models.PlantDatabase.CannotConnect):
             models.PlantDatabase.plant_params(1)
 
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_adds_device_to_plant_database(self, post, Token):
+        Token.last.return_value = mock.Mock(name="token", token="TOKEN")
+        models.PlantDatabase.add_device("DEVICE_ID")
+        post.assert_called_with("http://PLANT_DATABASE/api/devices",
+                                json={"token": "TOKEN",
+                                      "device_id": "DEVICE_ID"})
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_add_fails_silently_if_cannot_connect(self, post, Token):
+        post.side_effect = models.requests.exceptions.ConnectionError
+        Token.last.return_value = mock.Mock(name="token", token="TOKEN")
+        models.PlantDatabase.add_device("DEVICE_ID")
+        post.assert_called_with("http://PLANT_DATABASE/api/devices",
+                                json={"token": "TOKEN",
+                                      "device_id": "DEVICE_ID"})
+
+    @mock.patch("app.models.PLANT_DATABASE", new="PLANT_DATABASE")
+    @mock.patch("app.models.Token")
+    @mock.patch("app.models.requests.post")
+    def test_add_fails_silently_if_no_token(self, post, Token):
+        Token.last.return_value = None
+        self.assertEqual(models.PlantDatabase.add_device("DEVICE_ID"), None)
 
 class TestSensorDataPoint(unittest.TestCase):
 
