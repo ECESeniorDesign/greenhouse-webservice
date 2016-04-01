@@ -629,14 +629,7 @@ def updated_plants(): # pragma: no cover
     for plant in models.Plant.all():
         services.PlantUpdater(plant).update()
 
-def preseed(): # pragma: no cover
-    """Seed the database with a global setting object"""
-    if models.GlobalSetting.last() is None:
-        models.GlobalSetting.create(notify_plants=True,
-                                    notify_maintenance=True)
-
 def run(): # pragma: no cover
-    preseed()
     background.run()
     daily.run()
     socketio.run(app, debug=config.DEBUG, host="0.0.0.0")
