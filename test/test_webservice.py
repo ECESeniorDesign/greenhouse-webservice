@@ -646,8 +646,8 @@ class TestAPIPlantsController(unittest.TestCase):
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_successful_create_returns_data(self, PlantDatabase):
         PlantDatabase.find_plant.return_value = build_plant()
-        response = self.app.post("/api/plants", data={'plant_database_id': 1,
-                                                      'slot_id': 1})
+        response = self.app.post("/api/plants", data=json.dumps({'plant_database_id': 1,
+                                                      'slot_id': 1}))
         self.assertEqual(json.loads(response.data), {
            'name': "testPlant",
            'photo_url': "testPlant.png",
@@ -680,8 +680,8 @@ class TestAPIPlantsController(unittest.TestCase):
     def test_successful_create_saves_plant(self, PlantDatabase):
         self.assertEqual(len(webservice.models.Plant), 0)
         PlantDatabase.find_plant.return_value = build_plant()
-        self.app.post("/api/plants", data={'plant_database_id': 1,
-                                           'slot_id': 1})
+        self.app.post("/api/plants", data=json.dumps({'plant_database_id': 1,
+                                           'slot_id': 1}))
         self.assertEqual(len(webservice.models.Plant), 1)
         self.assertEqual(webservice.models.Plant.first().plant_database_id, 1)
         self.assertEqual(webservice.models.Plant.first().slot_id, 1)
@@ -690,15 +690,15 @@ class TestAPIPlantsController(unittest.TestCase):
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_failed_create_does_not_save_plant(self, PlantDatabase):
         PlantDatabase.find_plant.return_value = None
-        self.app.post("/api/plants", data={'plant_database_id': 1,
-                                           'slot_id': 1})
+        self.app.post("/api/plants", data=json.dumps({'plant_database_id': 1,
+                                           'slot_id': 1}))
         self.assertEqual(len(webservice.models.Plant), 0)
 
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_failed_returns_error(self, PlantDatabase):
         PlantDatabase.find_plant.return_value = None
-        response = self.app.post("/api/plants", data={'plant_database_id': 1,
-                                                      'slot_id': 1})
+        response = self.app.post("/api/plants", data=json.dumps({'plant_database_id': 1,
+                                                      'slot_id': 1}))
         self.assertEqual(json.loads(response.data), {'error': 'could not save plant'})
 
     def test_delete_removes_plant(self):
@@ -763,12 +763,12 @@ class TestAPIPlantSettingsController(unittest.TestCase):
         })
 
     def test_post_creates_new_setting(self):
-        response = self.app.post("/api/plants/1/settings", data={
+        response = self.app.post("/api/plants/1/settings", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5,
             'row': 1
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
             'id': 2,
@@ -780,24 +780,24 @@ class TestAPIPlantSettingsController(unittest.TestCase):
 
     def test_create_returns_error_if_no_plant(self):
         self.plant.destroy()
-        response = self.app.post("/api/plants/1/settings", data={
+        response = self.app.post("/api/plants/1/settings", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5,
             'row': 1
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
             'error': 'plant not found'
         })
 
     def test_update_edits_existing_settings(self):
-        response = self.app.post("/api/plants/1/settings/1", data={
+        response = self.app.post("/api/plants/1/settings/1", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 50,
             'row': 1
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
             'row': 1,
@@ -810,24 +810,24 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             50.0)
 
     def test_update_errors_if_no_setting(self):
-        response = self.app.post("/api/plants/1/settings/2", data={
+        response = self.app.post("/api/plants/1/settings/2", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5,
             'row': 1
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
             'error': 'setting not found'
         })
 
     def test_update_errors_if_invalid(self):
-        response = self.app.post("/api/plants/1/settings/1", data={
+        response = self.app.post("/api/plants/1/settings/1", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 0,
             'deviation_percent': 5,
             'row': 1
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
             'error': 'setting invalid'
@@ -980,12 +980,12 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
                             active_start=time(0, 12, 30),
                             active_end=time(1, 11, 15))
         GlobalSetting.controls.find.return_value = control
-        response = self.app.post("/api/settings/1", data={
+        response = self.app.post("/api/settings/1", data=json.dumps({
             'enabled': False,
             'active': False,
             'active_start': "00:12:30",
             'active_end': "01:11:15"
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         control.update.assert_called_with(enabled=False,
                                           active_start=time(0, 12, 30),
@@ -995,12 +995,12 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
     def test_errors_if_cannot_find_control(self, GlobalSetting):
         GlobalSetting.controls.find.side_effect = \
             webservice.models.lazy_record.RecordNotFound
-        response = self.app.post("/api/settings/1", data={
+        response = self.app.post("/api/settings/1", data=json.dumps({
             'enabled': False,
             'active': False,
             'active_start': "00:12:30",
             'active_end': "01:11:15"
-        })
+        }))
         self.assertEqual(response.status_code, 404)
 
     def test_update_edits_timestamp(self, GlobalSetting):
@@ -1011,12 +1011,12 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
                             active_start=time(0, 12, 30),
                             active_end=time(1, 11, 15))
         GlobalSetting.controls.find.return_value = control
-        response = self.app.post("/api/settings/1", data={
+        response = self.app.post("/api/settings/1", data=json.dumps({
             'enabled': False,
             'active': False,
             'active_start': None,
             'active_end': None
-        })
+        }))
         self.assertEqual(response.status_code, 200)
         control.update.assert_called_with(enabled=False,
                                           active_start=None,
@@ -1078,9 +1078,9 @@ class TestAPINotificationSettingsController(unittest.TestCase):
     @mock.patch("app.webservice.models.PlantDatabase")
     def test_sends_settings_to_plant_database(self, PlantDatabase, GS):
         response = self.app.post("/api/notification_settings",
-                                 data={"email": True, "push": False,
+                                 data=json.dumps({"email": True, "push": False,
                                        "notify_plants": False,
-                                       "notify_maintenance": True})
+                                       "notify_maintenance": True}))
         self.assertEqual(response.status_code, 200)
         PlantDatabase.update_notification_settings.assert_called_with(
             {"email": True, "push": False})

@@ -4,6 +4,7 @@ import forms
 import router
 import config
 import eventlet
+import json
 eventlet.monkey_patch()
 from flask_socketio import SocketIO
 import jinja2
@@ -299,8 +300,9 @@ class APIPlantsController(object):
 
     @staticmethod
     def create():
-        plant_database_id = int(flask.request.form["plant_database_id"])
-        slot_id = int(flask.request.form["slot_id"])
+        params = json.loads(flask.request.data)
+        plant_database_id = params["plant_database_id"]
+        slot_id = params["slot_id"]
         plant = models.PlantDatabase.find_plant(plant_database_id)
         if plant:
             plant.slot_id = slot_id
@@ -340,12 +342,13 @@ class APIPlantSettingsController(object):
 
     @staticmethod
     def create(plant_id):
+        params = json.loads(flask.request.data)
         threshold_params = {
-            'sensor_name': flask.request.form['sensor_name'],
-            'deviation_percent': int(flask.request.form['deviation_percent']),
-            'deviation_time': int(flask.request.form['deviation_time'])
+            'sensor_name': params['sensor_name'],
+            'deviation_percent': params['deviation_percent'],
+            'deviation_time': params['deviation_time']
         }
-        row = int(flask.request.form['row'])
+        row = params['row']
         plant = models.Plant.for_slot(plant_id, False)
         if plant:
             setting = plant.plant_setting.notification_thresholds.create(
@@ -356,12 +359,13 @@ class APIPlantSettingsController(object):
 
     @staticmethod
     def update(plant_id, id):
+        params = json.loads(flask.request.data)
         threshold_params = {
-            'sensor_name': flask.request.form['sensor_name'],
-            'deviation_percent': int(flask.request.form['deviation_percent']),
-            'deviation_time': int(flask.request.form['deviation_time'])
+            'sensor_name': params['sensor_name'],
+            'deviation_percent': params['deviation_percent'],
+            'deviation_time': params['deviation_time']
         }
-        row = int(flask.request.form['row'])
+        row = params['row']
         try:
             setting = models.NotificationThreshold.find(id)
             setting.update(**threshold_params)
@@ -429,10 +433,12 @@ class APIGlobalSettingsController(object):
                 return None
             h, m, s = map(int, time.split(":"))
             return datetime.time(h, m, s)
+
+        params = json.loads(flask.request.data)
+
         try:
             control = models.GlobalSetting.controls.find(id)
-            params = flask.request.form
-            enabled = True if params['enabled'] == 'True' else False
+            enabled = params.get('enabled', False)
             active_start = params.get('active_start', None)
             active_end = params.get('active_end', None)
             control.update(enabled=enabled,
@@ -473,19 +479,14 @@ class APINotificationSettingsController(object):
 
     @staticmethod
     def create():
-
-        def to_bool(string):
-            return string == 'True'
-
-        params = {
-            "push": to_bool(flask.request.form["push"]),
-            "email": to_bool(flask.request.form["email"]),
+        params = json.loads(flask.request.data)
+        pd_params = {
+            "push": params["push"],
+            "email": params["email"],
         }
-        models.PlantDatabase.update_notification_settings(params)
-        models.GlobalSetting.notify_plants = to_bool(
-            flask.request.form["notify_plants"])
-        models.GlobalSetting.notify_maintenance = to_bool(
-            flask.request.form["notify_maintenance"])
+        models.PlantDatabase.update_notification_settings(pd_params)
+        models.GlobalSetting.notify_plants = params["notify_plants"]
+        models.GlobalSetting.notify_maintenance = params["notify_maintenance"]
         return '', 200
 
 
