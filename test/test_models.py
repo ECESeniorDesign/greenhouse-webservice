@@ -705,6 +705,31 @@ class TestGlobalSetting(unittest.TestCase):
         Control.find_by.side_effect = models.lazy_record.RecordNotFound
         self.assertEqual(models.GlobalSetting.control("fans"), None)
 
+    @mock.patch("app.models.GlobalSetting.last")
+    def test_delegates_notification_settings_to_singleton(self, last):
+        last.return_value = mock.Mock(name="GlobalSetting", notify_plants=True,
+                                      notify_maintenance=False)
+        self.assertEqual(models.GlobalSetting.notify_plants, True)
+        self.assertEqual(models.GlobalSetting.notify_maintenance, False)
+
+    @mock.patch("app.models.GlobalSetting.last")
+    def test_sets_plant_notification_settings_to_singleton(self, last):
+        singleton = mock.Mock(name="GlobalSetting", notify_plants=True,
+                              notify_maintenance=False, save=mock.Mock())
+        last.return_value = singleton
+        models.GlobalSetting.notify_plants = False
+        self.assertEqual(singleton.notify_plants, False)
+        singleton.save.assert_called_with()
+
+    @mock.patch("app.models.GlobalSetting.last")
+    def test_sets_maintainence_notification_settings_to_singleton(self, last):
+        singleton = mock.Mock(name="GlobalSetting", notify_plants=True,
+                              notify_maintenance=False, save=mock.Mock())
+        last.return_value = singleton
+        models.GlobalSetting.notify_maintenance = False
+        self.assertEqual(singleton.notify_maintenance, False)
+        singleton.save.assert_called_with()
+
 
 def plant_json():
     return {

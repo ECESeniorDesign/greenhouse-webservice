@@ -29,6 +29,8 @@ $(document).ready ->
 
   $("input[name='push']").bootstrapSwitch()
   $("input[name='email']").bootstrapSwitch()
+  $("input[name='notify_plants']").bootstrapSwitch()
+  $("input[name='notify_maintenance']").bootstrapSwitch()
 
   $("input.ui-timepicker-input").timepicker({ 'timeFormat': 'h:i A', 'forceRoundTime': true })
 

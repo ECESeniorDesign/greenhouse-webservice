@@ -23,57 +23,83 @@
     <form action="{{ url_for('GlobalSettingsController.create') }}" method="post">
       <h2>Control Settings</h2>
       {% for control in controls %}
-        <div class="control-row">
+        <div class="row control-row">
           <div class="form-inline">
-            <div class="form-group">
+            <div class="col-lg-1 col-lg-offset-2">
               <label class="setting-label">{{ control.name.title() }}</label>
               <input type="hidden" name="id" value="{{ control.id }}">
             </div>
-            {% if control.enabled %}
-              <div class="form-group">
-                <input name="active_start" type="text" class="form-control time ui-timepicker-input" autocomplete="off" placeholder="Start Time" value="{{ control.active_start_time }}">
-              </div>
-              <div class="form-group">
-                <input name="active_end" type="text" class="form-control time ui-timepicker-input" autocomplete="off" placeholder="End Time" value="{{ control.active_end_time }}">
-              </div>
-            {% else %}
-              <div class="form-group">
-                <input name="active_start" type="text" class="form-control ui-timepicker-input" autocomplete="off" placeholder="Start Time" disabled>
-              </div>
-              <div class="form-group">
-                <input name="active_end" type="text" class="form-control ui-timepicker-input" autocomplete="off" placeholder="End Time" disabled>
-              </div>
-            {% endif %}
-            <div class="form-group">
+            <div class="col-lg-8">
               {% if control.enabled %}
-                {% if control.active %}
-                  <a class="btn btn-warning" data-action="update-control" data-mode="temporary_disable" id="toggle_control_{{ control.id }}"><i class="fa fa-pause"></i></a>
+                <div class="form-group">
+                  <input name="active_start" type="text" class="form-control time ui-timepicker-input" autocomplete="off" placeholder="Start Time" value="{{ control.active_start_time }}">
+                </div>
+                <div class="form-group">
+                  <input name="active_end" type="text" class="form-control time ui-timepicker-input" autocomplete="off" placeholder="End Time" value="{{ control.active_end_time }}">
+                </div>
+              {% else %}
+                <div class="form-group">
+                  <input name="active_start" type="text" class="form-control ui-timepicker-input" autocomplete="off" placeholder="Start Time" disabled>
+                </div>
+                <div class="form-group">
+                  <input name="active_end" type="text" class="form-control ui-timepicker-input" autocomplete="off" placeholder="End Time" disabled>
+                </div>
+              {% endif %}
+              <div class="form-group">
+                {% if control.enabled %}
+                  {% if control.active %}
+                    <a class="btn btn-warning" data-action="update-control" data-mode="temporary_disable" id="toggle_control_{{ control.id }}"><i class="fa fa-pause"></i></a>
+                  {% else %}
+                    <a class="btn btn-success" data-action="update-control" data-mode="activate" id="toggle_control_{{ control.id }}"><i class="fa fa-play"></i></a>
+                  {% endif %}
                 {% else %}
-                  <a class="btn btn-success" data-action="update-control" data-mode="activate" id="toggle_control_{{ control.id }}"><i class="fa fa-play"></i></a>
+                  <a class="btn btn-success disabled" data-action="update-control" data-mode="activate" id="toggle_control_{{ control.id }}"><i class="fa fa-play"></i></a>
                 {% endif %}
-              {% else %}
-                <a class="btn btn-success disabled" data-action="update-control" data-mode="activate" id="toggle_control_{{ control.id }}"><i class="fa fa-play"></i></a>
-              {% endif %}
-            </div>
-            <div class="form-group">
-              {% if control.enabled %}
-                <input type="checkbox" name="enabled" value="{{ control.id }}" checked>
-              {% else %}
-                <input type="checkbox" name="enabled" value="{{ control.id }}">
-              {% endif %}
+              </div>
+              <div class="form-group">
+                {% if control.enabled %}
+                  <input type="checkbox" name="enabled" value="{{ control.id }}" checked>
+                {% else %}
+                  <input type="checkbox" name="enabled" value="{{ control.id }}">
+                {% endif %}
+              </div>
             </div>
           </div>
         </div>
       {% endfor %}
       <h2>Notification Settings</h2>
-      <div class="control-row">
-        <div class="form-group">
+      <h3>Delivery</h3>
+      <div class="row control-row">
+        <div class="col-sm-2 col-sm-offset-4">
           <label class="setting-label">Push</label>
-            <input type="checkbox" name="push" {% if notification_settings["push"] %}checked{% endif %}>
         </div>
-        <div class="form-group">
+        <div class="col-sm-2">
+          <input type="checkbox" name="push" {% if notification_settings["push"] %}checked{% endif %}>
+        </div>
+      </div>
+      <div class="row control-row">
+        <div class="col-sm-2 col-sm-offset-4">
           <label class="setting-label">Email</label>
+        </div>
+        <div class="col-sm-2">
           <input type="checkbox" name="email" {% if notification_settings["email"] %}checked{% endif %}>
+        </div>
+      </div>
+      <h3>Circumstances</h3>
+      <div class="row control-row">
+        <div class="col-sm-2 col-sm-offset-4">
+          <label class="setting-label">Plant Conditions</label>
+        </div>
+        <div class="col-sm-2">
+          <input type="checkbox" name="notify_plants" {% if notify_plants %}checked{% endif %}>
+        </div>
+      </div>
+      <div class="row control-row">
+        <div class="col-sm-2 col-sm-offset-4">
+          <label class="setting-label">Maintenance</label>
+        </div>
+        <div class="col-sm-2">
+          <input type="checkbox" name="notify_maintenance" {% if notify_maintenance %}checked{% endif %}>
         </div>
       </div>
       <button type="submit" class="btn btn-default">Submit</button>

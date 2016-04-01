@@ -514,10 +514,14 @@ class TestGlobalSettingsController(unittest.TestCase):
                                 dt(1, 11, 15)))
         control.name = "fan"
         GlobalSetting.controls = [control]
+        GlobalSetting.notify_plants = False
+        GlobalSetting.notify_maintenance = True
         self.app.get("/settings")
         render_template.assert_called_with("global_settings/index.html",
                                            controls=[control],
-                                           notification_settings=ns)
+                                           notification_settings=ns,
+                                           notify_plants=False,
+                                           notify_maintenance=True)
 
     @mock.patch(
         "app.webservice.models.PlantDatabase.get_notification_settings")
@@ -1048,15 +1052,19 @@ class TestAPINotificationSettingsController(unittest.TestCase):
         with open(SCHEMA) as schema:
             webservice.models.lazy_record.load_schema(schema.read())
 
+    @mock.patch("app.webservice.models.GlobalSetting")
     @mock.patch("app.webservice.models.PlantDatabase")
-    def test_gets_settings_from_plant_database(self, PlantDatabase):
-        PlantDatabase.get_notification_settings.return_value = {'email': True,
-                                                                'push': False}
+    def test_gets_settings_from_plant_database(self, PD, GS):
+        PD.get_notification_settings.return_value = {'email': True,
+                                                     'push': False}
+        GS.notify_plants = False
+        GS.notify_maintenance = True
         response = self.app.get("/api/notification_settings")
         self.assertEqual(response.status_code, 200)
-        PlantDatabase.get_notification_settings.assert_called_with()
+        PD.get_notification_settings.assert_called_with()
         self.assertEqual(json.loads(response.data),
-                         {'email': True, 'push': False})
+                         {'email': True, 'push': False,
+                          'notify_plants': False, 'notify_maintenance': True})
 
     @mock.patch(
         "app.webservice.models.PlantDatabase.get_notification_settings")
@@ -1066,13 +1074,18 @@ class TestAPINotificationSettingsController(unittest.TestCase):
         response = self.app.get("/api/notification_settings")
         self.assertEqual(response.status_code, 404)
 
+    @mock.patch("app.webservice.models.GlobalSetting")
     @mock.patch("app.webservice.models.PlantDatabase")
-    def test_sends_settings_to_plant_database(self, PlantDatabase):
+    def test_sends_settings_to_plant_database(self, PlantDatabase, GS):
         response = self.app.post("/api/notification_settings",
-                                 data={"email": True, "push": False})
+                                 data={"email": True, "push": False,
+                                       "notify_plants": False,
+                                       "notify_maintenance": True})
         self.assertEqual(response.status_code, 200)
         PlantDatabase.update_notification_settings.assert_called_with(
             {"email": True, "push": False})
+        self.assertEqual(GS.notify_plants, False)
+        self.assertEqual(GS.notify_maintenance, True)
 
 
 def build_plant(slot_id=1):

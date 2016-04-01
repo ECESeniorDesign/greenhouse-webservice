@@ -275,9 +275,34 @@ class WaterLevel(lazy_record.Base):
     }
 
 
-class GlobalSetting(object):
+class GlobalSetting(lazy_record.Base):
 
-    class __metaclass__(type):
+    __attributes__ = {
+        'notify_plants': bool,
+        'notify_maintenance': bool,
+    }
+
+    class __metaclass__(lazy_record.Base.__metaclass__):
+
+        @property
+        def notify_plants(cls):
+            return cls.last().notify_plants
+
+        @notify_plants.setter
+        def notify_plants(cls, value):
+            singleton = cls.last()
+            singleton.notify_plants = value
+            singleton.save()
+
+        @property
+        def notify_maintenance(cls):
+            return cls.last().notify_maintenance
+
+        @notify_maintenance.setter
+        def notify_maintenance(cls, value):
+            singleton = cls.last()
+            singleton.notify_maintenance = value
+            singleton.save()
 
         @property
         def controls(cls):

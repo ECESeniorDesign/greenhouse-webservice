@@ -13,14 +13,25 @@ class GlobalSettingsForm(object):
             return onoff == "on"
         controls = {control: self._data_for(control.id)
                     for control in self.controls}
-        return dict(controls, notifications={
-            'push': to_bool(self.form_data.get("push")),
-            'email': to_bool(self.form_data.get("email"))})
+        return dict(controls,
+                    notifications={
+                        'push': to_bool(self.form_data.get("push")),
+                        'email': to_bool(self.form_data.get("email"))},
+                    global_settings={
+                        'notify_plants': to_bool(self.form_data.get(
+                                                 "notify_plants")),
+                        'notify_maintenance': to_bool(self.form_data.get(
+                                                      "notify_maintenance"))
+                    })
 
     def submit(self):
         for control, data in self.data.items():
             if control == "notifications":
                 models.PlantDatabase.update_notification_settings(data)
+            elif control == "global_settings":
+                models.GlobalSetting.notify_plants = data['notify_plants']
+                models.GlobalSetting.notify_maintenance = \
+                    data['notify_maintenance']
             else:
                 control.update(**data)
                 control.save()

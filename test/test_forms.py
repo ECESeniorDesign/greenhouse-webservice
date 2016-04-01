@@ -15,7 +15,8 @@ class TestGlobalSettingsForm(unittest.TestCase):
                           'enabled': ['2', '1'],
                           'id': ['2', '1'],
                           'active_end': ['01:30 AM', ''],
-                          'push': 'on'}
+                          'push': 'on',
+                          'notify_plants': 'on'}
         form_data = FormDataStub(self.form_data)
         self.form = forms.GlobalSettingsForm(self.controls, form_data)
 
@@ -34,6 +35,10 @@ class TestGlobalSettingsForm(unittest.TestCase):
             'notifications': {
                 'push': True,
                 'email': False
+            },
+            'global_settings': {
+                'notify_plants': True,
+                'notify_maintenance': False
             }
         })
 
@@ -56,6 +61,10 @@ class TestGlobalSettingsForm(unittest.TestCase):
             'notifications': {
                 'push': True,
                 'email': False
+            },
+            'global_settings': {
+                'notify_plants': True,
+                'notify_maintenance': False
             }
         })
 
@@ -76,11 +85,16 @@ class TestGlobalSettingsForm(unittest.TestCase):
             'notifications': {
                 'push': True,
                 'email': False
+            },
+            'global_settings': {
+                'notify_plants': True,
+                'notify_maintenance': False
             }
         })
 
+    @mock.patch("app.forms.models.GlobalSetting")
     @mock.patch("app.forms.models.PlantDatabase")
-    def test_submit_saves_form(self, PlantDatabase):
+    def test_submit_saves_form(self, PlantDatabase, GS):
         self.form_data['enabled'] = ['2']
         self.form_data['active_start'] = ['02:00 PM']
         self.form_data['active_end'] = ['01:30 AM']
@@ -94,13 +108,21 @@ class TestGlobalSettingsForm(unittest.TestCase):
         self.controls[0].save.assert_called_with()
         self.controls[1].save.assert_called_with()
 
+    @mock.patch("app.forms.models.GlobalSetting")
     @mock.patch("app.forms.models.PlantDatabase")
-    def test_submit_updates_notification_settings(self, PlantDatabase):
+    def test_submit_updates_notification_settings(self, PlantDatabase, GS):
         self.form.submit()
         PlantDatabase.update_notification_settings.assert_called_with({
             'push': True,
             'email': False
         })
+
+    @mock.patch("app.forms.models.GlobalSetting")
+    @mock.patch("app.forms.models.PlantDatabase")
+    def test_submit_updates_global_settings(self, PD, GlobalSetting):
+        self.form.submit()
+        self.assertEqual(GlobalSetting.notify_plants, True)
+        self.assertEqual(GlobalSetting.notify_maintenance, False)
 
 class FormDataStub(object):
     def __init__(self, data):

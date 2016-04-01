@@ -242,9 +242,13 @@ class GlobalSettingsController(object):
     def index():
         controls = models.GlobalSetting.controls
         ns = models.PlantDatabase.get_notification_settings()
+        notify_plants = models.GlobalSetting.notify_plants
+        notify_maintenance = models.GlobalSetting.notify_maintenance
         return flask.render_template("global_settings/index.html",
                                      controls=controls,
-                                     notification_settings=ns)
+                                     notification_settings=ns,
+                                     notify_plants=notify_plants,
+                                     notify_maintenance=notify_maintenance)
 
     @staticmethod
     def create():
@@ -456,7 +460,13 @@ class APINotificationSettingsController(object):
     @staticmethod
     def index():
         try:
-            settings = models.PlantDatabase.get_notification_settings()
+            pd_settings = models.PlantDatabase.get_notification_settings()
+            g_settings = {
+                'notify_plants': models.GlobalSetting.notify_plants,
+                'notify_maintenance': models.GlobalSetting.notify_maintenance,
+            }
+            settings = dict(pd_settings)
+            settings.update(g_settings)
             return flask.jsonify(settings)
         except:
             return '', 404
@@ -472,6 +482,10 @@ class APINotificationSettingsController(object):
             "email": to_bool(flask.request.form["email"]),
         }
         models.PlantDatabase.update_notification_settings(params)
+        models.GlobalSetting.notify_plants = to_bool(
+            flask.request.form["notify_plants"])
+        models.GlobalSetting.notify_maintenance = to_bool(
+            flask.request.form["notify_maintenance"])
         return '', 200
 
 
@@ -586,16 +600,18 @@ def create_sensor_data(): # pragma: no cover
 
 @background.task
 def notify_plant_condition(): # pragma: no cover
-    for nt in models.NotificationThreshold.all():
-        if policies.NotificationPolicy(nt).should_notify():
-            services.PlantNotifier(nt).notify()
+    if models.GlobalSetting.notify_plants:
+        for nt in models.NotificationThreshold.all():
+            if policies.NotificationPolicy(nt).should_notify():
+                services.PlantNotifier(nt).notify()
 
 @background.task
 def notify_water_level(): # pragma: no cover
-    water_level = models.WaterLevel.last()
-    if policies.WaterNotificationPolicy(water_level).should_notify():
-        # Implicit: water_level exists if the policy returns true
-        services.WaterLevelNotifier(water_level.level).notify()
+    if models.GlobalSetting.notify_maintenance:
+        water_level = models.WaterLevel.last()
+        if policies.WaterNotificationPolicy(water_level).should_notify():
+            # Implicit: water_level exists if the policy returns true
+            services.WaterLevelNotifier(water_level.level).notify()
 
 @background.task
 def refresh_token(): # pragma: no cover
@@ -613,7 +629,14 @@ def updated_plants(): # pragma: no cover
     for plant in models.Plant.all():
         services.PlantUpdater(plant).update()
 
+def preseed(): # pragma: no cover
+    """Seed the database with a global setting object"""
+    if models.GlobalSetting.last() is None:
+        models.GlobalSetting.create(notify_plants=True,
+                                    notify_maintenance=True)
+
 def run(): # pragma: no cover
+    preseed()
     background.run()
     daily.run()
     socketio.run(app, debug=config.DEBUG, host="0.0.0.0")

@@ -75,4 +75,13 @@ create table controls (
   active_end timestamp,
   created_at timestamp not null,
   updated_at timestamp not null
-)
+);
+
+drop table if exists global_settings;
+create table global_settings (
+  id integer primary key autoincrement,
+  notify_plants boolean not null,
+  notify_maintenance boolean not null,
+  created_at timestamp not null,
+  updated_at timestamp not null
+);
