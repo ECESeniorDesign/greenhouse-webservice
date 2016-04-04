@@ -435,7 +435,8 @@ class APIGlobalSettingsController(object):
             return datetime.time(h, m, s)
 
         params = json.loads(flask.request.data)
-
+        if params["active"] is True and params["enabled"] is False:
+            return ('', 400)
         try:
             control = models.GlobalSetting.controls.find(id)
             enabled = params.get('enabled', False)
@@ -445,6 +446,10 @@ class APIGlobalSettingsController(object):
                            active_start=get_time(active_start),
                            active_end=get_time(active_end))
             control.save()
+            if not params["active"] and control.active is True:
+                control.temporarily_disable()
+            elif params["active"] and control.active is not True:
+                control.activate()
             return ('', 200)
         except models.lazy_record.RecordNotFound:
             return ('', 404)

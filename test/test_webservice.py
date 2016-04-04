@@ -992,6 +992,90 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
                                           active_end=time(1, 11, 15))
         control.save.assert_called_with()
 
+    def test_update_temp_disables(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=True,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data=json.dumps({
+            'enabled': False,
+            'active': False,
+            'active_start': "00:12:30",
+            'active_end': "01:11:15"
+        }))
+        self.assertEqual(response.status_code, 200)
+        control.update.assert_called_with(enabled=False,
+                                          active_start=time(0, 12, 30),
+                                          active_end=time(1, 11, 15))
+        control.save.assert_called_with()
+        control.temporarily_disable.assert_called_with()
+
+    def test_update_activates(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data=json.dumps({
+            'enabled': True,
+            'active': True,
+            'active_start': "00:12:30",
+            'active_end': "01:11:15"
+        }))
+        self.assertEqual(response.status_code, 200)
+        control.update.assert_called_with(enabled=True,
+                                          active_start=time(0, 12, 30),
+                                          active_end=time(1, 11, 15))
+        control.save.assert_called_with()
+        control.activate.assert_called_with()
+
+    def test_update_does_not_activate_if_active(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=True,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data=json.dumps({
+            'enabled': True,
+            'active': True,
+            'active_start': "00:12:30",
+            'active_end': "01:11:15"
+        }))
+        self.assertEqual(response.status_code, 200)
+        control.update.assert_called_with(enabled=True,
+                                          active_start=time(0, 12, 30),
+                                          active_end=time(1, 11, 15))
+        control.save.assert_called_with()
+        control.activate.assert_not_called()
+
+    def test_update_does_not_disable_if_disabled(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data=json.dumps({
+            'enabled': False,
+            'active': False,
+            'active_start': "00:12:30",
+            'active_end': "01:11:15"
+        }))
+        self.assertEqual(response.status_code, 200)
+        control.update.assert_called_with(enabled=False,
+                                          active_start=time(0, 12, 30),
+                                          active_end=time(1, 11, 15))
+        control.save.assert_called_with()
+        control.temporarily_disable.assert_not_called()
+
     def test_errors_if_cannot_find_control(self, GlobalSetting):
         GlobalSetting.controls.find.side_effect = \
             webservice.models.lazy_record.RecordNotFound
@@ -1022,6 +1106,24 @@ class TestAPIGlobalSettingsController(unittest.TestCase):
                                           active_start=None,
                                           active_end=None)
         control.save.assert_called_with()
+
+    def test_errors_if_active_and_not_enabled(self, GlobalSetting):
+        control = mock.Mock(name="control",
+                            enabled=True,
+                            id=1,
+                            active=False,
+                            active_start=time(0, 12, 30),
+                            active_end=time(1, 11, 15))
+        GlobalSetting.controls.find.return_value = control
+        response = self.app.post("/api/settings/1", data=json.dumps({
+            'enabled': False,
+            'active': True,
+            'active_start': None,
+            'active_end': None
+        }))
+        self.assertEqual(response.status_code, 400)
+        control.update.assert_not_called()
+        control.save.assert_not_called()
 
 
 @mock.patch("app.webservice.models.PlantDatabase")
