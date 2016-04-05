@@ -348,14 +348,13 @@ class APIPlantSettingsController(object):
             'deviation_percent': params['deviation_percent'],
             'deviation_time': params['deviation_time']
         }
-        row = params['row']
         plant = models.Plant.for_slot(plant_id, False)
         if plant:
             setting = plant.plant_setting.notification_thresholds.create(
                 **threshold_params)
-            return flask.jsonify(dict(row=row, id=setting.id, **threshold_params))
+            return flask.jsonify(dict(id=setting.id, **threshold_params))
         else:
-            return flask.jsonify({"error": "plant not found"})
+            return ('', 404)
 
     @staticmethod
     def update(plant_id, id):
@@ -365,16 +364,16 @@ class APIPlantSettingsController(object):
             'deviation_percent': params['deviation_percent'],
             'deviation_time': params['deviation_time']
         }
-        row = params['row']
         try:
-            setting = models.NotificationThreshold.find(id)
+            plant = models.Plant.for_slot(plant_id)
+            setting = plant.plant_setting.notification_thresholds.find(id)
             setting.update(**threshold_params)
             setting.save()
-            return flask.jsonify(dict(row=row, **threshold_params))
+            return flask.jsonify(threshold_params)
         except models.lazy_record.RecordNotFound:
-            return flask.jsonify({"error": "setting not found"})
+            return ('', 404)
         except models.lazy_record.RecordInvalid:
-            return flask.jsonify({"error": "setting invalid"})
+            return ('', 400)
 
     @staticmethod
     def destroy(plant_id, id):

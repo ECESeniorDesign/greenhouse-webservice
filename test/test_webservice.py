@@ -767,12 +767,10 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5,
-            'row': 1
         }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
             'id': 2,
-            'row': 1,
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5
@@ -784,23 +782,17 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5,
-            'row': 1
         }))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data), {
-            'error': 'plant not found'
-        })
+        self.assertEqual(response.status_code, 404)
 
     def test_update_edits_existing_settings(self):
         response = self.app.post("/api/plants/1/settings/1", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 50,
-            'row': 1
         }))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data), {
-            'row': 1,
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 50
@@ -814,24 +806,16 @@ class TestAPIPlantSettingsController(unittest.TestCase):
             'sensor_name': 'light',
             'deviation_time': 5,
             'deviation_percent': 5,
-            'row': 1
         }))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data), {
-            'error': 'setting not found'
-        })
+        self.assertEqual(response.status_code, 404)
 
     def test_update_errors_if_invalid(self):
         response = self.app.post("/api/plants/1/settings/1", data=json.dumps({
             'sensor_name': 'light',
             'deviation_time': 0,
             'deviation_percent': 5,
-            'row': 1
         }))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data), {
-            'error': 'setting invalid'
-        })
+        self.assertEqual(response.status_code, 400)
 
     def test_delete_deletes_setting(self):
         response = self.app.delete("/api/plants/1/settings/1")
