@@ -1,6 +1,7 @@
 import os
 
-DATABASE = "/tmp/greenhouse-webservice.db"
+DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                        "greenhouse-webservice.db")
 TEST_DATABASE = ":memory:"
 SCHEMA = os.path.join(os.path.dirname(__file__), "schema.sql")
 DEBUG = True

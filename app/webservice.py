@@ -621,7 +621,10 @@ def notify_water_level(): # pragma: no cover
 @background.task
 def refresh_token(): # pragma: no cover
     if policies.TokenRefreshPolicy().requires_refresh():
-        models.Token.refresh()
+        try:
+            models.Token.refresh()
+        except:
+            pass
 
 @background.task
 def destroy_old_tokens(): # pragma: no cover
