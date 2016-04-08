@@ -39,7 +39,7 @@ class MethodRewriteMiddleware(object):
 
 app.wsgi_app = MethodRewriteMiddleware(app.wsgi_app)
 
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, async_mode='eventlet', allow_upgrades=True)
 app.secret_key = config.SECRET_KEY
 router = router.Router(app)
 background = BackgroundTaskRunner(refresh=10)
@@ -586,7 +586,7 @@ def create_sensor_data(): # pragma: no cover
     import random
     sun = [25] * config.NUMBER_OF_PLANTS
     water = [20] * config.NUMBER_OF_PLANTS
-    humidity = [0.67] * config.NUMBER_OF_PLANTS
+    humidity = [67.0] * config.NUMBER_OF_PLANTS
     temperature = [87.1] * config.NUMBER_OF_PLANTS
     models.WaterLevel.create(level=52)
     for i in range(config.NUMBER_OF_PLANTS):
@@ -596,7 +596,7 @@ def create_sensor_data(): # pragma: no cover
         water[i] = min(max(water[i], 0), 100)
         temperature[i] += random.uniform(-5, 5)
         temperature[i] = min(max(temperature[i], 0), 100)
-        humidity[i] = random.random()
+        humidity[i] = random.random() * 100
     plants = [models.Plant.for_slot(slot_id, False)
               for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
     for index, plant in enumerate(plants):
