@@ -837,28 +837,28 @@ class TestAPILogsController(unittest.TestCase):
         with open(SCHEMA) as schema:
             webservice.models.lazy_record.load_schema(schema.read())
         self.plant = create_plant(slot_id=1)
-        self.sensor_data = {
-            "light": [10.0, 20.0, 30.0, 40.0],
-            "water": [50.0, 60.0, 70.0, 80.0],
-            "humidity": [0.1, 0.2, 0.3, 0.4],
-            "temperature": [55.0, 65.0, 75.0, 85.0]
-        }
-        for sensor, vals in self.sensor_data.items():
-            for val in vals:
-                self.plant.record_sensor(sensor, val)
 
-    def test_displays_sensor_data(self):
+    @mock.patch("app.webservice.presenters.ChartDataPresenter")
+    def test_invokes_presenter(self, ChartDataPresenter):
+        presenter = ChartDataPresenter.return_value
+        presenter.ideal_chart_data.return_value = "IDEAL"
+        presenter.history_chart_data_for.return_value = "HISTORY"
         response = self.app.get("/api/plants/1/logs")
+        ChartDataPresenter.assert_called_with(self.plant)
+        presenter.ideal_chart_data.assert_called_with()
+        self.assertEqual(len(presenter.history_chart_data_for.mock_calls), 4)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.data),
-                         dict(id=1, **self.sensor_data))
+                         {'history': {'humidity': 'HISTORY',
+                                      'light': 'HISTORY',
+                                      'temperature': 'HISTORY',
+                                      'water': 'HISTORY'},
+                          'ideal': 'IDEAL'})
 
     def test_displays_error_if_no_plant(self):
         self.plant.destroy()
         response = self.app.get("/api/plants/1/logs")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.data),
-                         {"error": "plant not found"})
+        self.assertEqual(response.status_code, 404)
 
 
 @mock.patch("app.webservice.models.GlobalSetting")

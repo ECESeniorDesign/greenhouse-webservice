@@ -391,13 +391,16 @@ class APILogsController(object):
     def index(plant_id):
         try:
             plant = models.Plant.for_slot(plant_id)
-            data = {"id": plant.id}
-            sensors = set(models.SensorDataPoint.SENSORS)
-            for sensor in sensors:
-                data[sensor] = [s.sensor_value for s in getattr(plant.sensor_data_points, sensor)()]
+            presenter = presenters.ChartDataPresenter(plant)
+            data = {}
+            data["ideal"] = presenter.ideal_chart_data()
+            data["history"] = {
+                sensor : presenter.history_chart_data_for(sensor)
+                for sensor in models.SensorDataPoint.SENSORS
+            }
             return flask.jsonify(data)
         except models.lazy_record.RecordNotFound:
-            return flask.jsonify({"error": "plant not found"})
+            return ('{"error": "plant not found"}', 404)
 
 
 @router.route("/api/settings", only=["index", "update"])
