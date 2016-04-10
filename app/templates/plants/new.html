@@ -24,7 +24,7 @@
               <img src="{{ plant.photo_url }}" width="100%">
               <div class="caption">
                 <h4>{{ plant.name }}</h4>
-                <form action="{{ url_for('PlantsController.create') }}" method="post">
+                <form action="{{ url_for('PlantsController.create') }}" method="post" remote="true">
                   <input type="hidden" name="slot_id" value="{{ slot_id }}">
                   <input type="hidden" name="plant_database_id" value="{{ plant.plant_database_id }}">
                   <input type="submit" value="Select" class="btn btn-primary btn-block">

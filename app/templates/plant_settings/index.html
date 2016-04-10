@@ -21,7 +21,7 @@
       <h1>Settings for {{plant.name}}</h1>
     </div>
     <h2>Notification Settings</h2>
-    <form action="{{ url_for('PlantSettingsController.create', plant_id=plant.slot_id) }}" method="post">
+    <form action="{{ url_for('PlantSettingsController.create', plant_id=plant.slot_id) }}" method="post" remote="true">
       <div class="panel panel-default">
         <div class="panel-heading">
           <div class="form-inline">
@@ -63,7 +63,7 @@
 </div>
 <div class="row">
   <div class="col-sm-8 col-sm-offset-2 text-center">
-        <form action="{{ url_for('PlantsController.destroy', id=plant.slot_id) }}?__METHOD_OVERRIDE__=DELETE" method="post">
+        <form action="{{ url_for('PlantsController.destroy', id=plant.slot_id) }}?__METHOD_OVERRIDE__=DELETE" method="post" remote="true">
           <button type="submit" class="btn btn-danger btn-block">Delete</button>
         </form>
   </div>
