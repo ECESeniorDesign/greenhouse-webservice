@@ -92,3 +92,8 @@
 .control-row {
   margin-bottom: 5px;
 }
+
+#body {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
