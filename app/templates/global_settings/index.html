@@ -20,7 +20,7 @@
     <div class="row">
       <h1>Greenhouse Settings</h1>
     </div>
-    <form action="{{ url_for('GlobalSettingsController.create') }}" method="post">
+    <form action="{{ url_for('GlobalSettingsController.create') }}" method="post" remote="true">
       <h2>Control Settings</h2>
       {% for control in controls %}
         <div class="row control-row">
