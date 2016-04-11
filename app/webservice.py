@@ -563,7 +563,6 @@ def send_data_to_client(slot_id):
 
 @socketio.on("update-control", namespace="/settings")
 def update_control(control_id, status):
-    # TODO actually update the control element
     control = models.Control.find(int(control_id))
     if status == "temporary_disable":
         control.temporarily_disable()
@@ -580,31 +579,37 @@ def update_control(control_id, status):
 def load_sensor_data():
     socketio.emit('data-update', True, namespace="/plants")
 
-# Remove this for production
 @background.task
 def create_sensor_data(): # pragma: no cover
-    import random
-    sun = [25] * config.NUMBER_OF_PLANTS
-    water = [20] * config.NUMBER_OF_PLANTS
-    humidity = [67.0] * config.NUMBER_OF_PLANTS
-    temperature = [87.1] * config.NUMBER_OF_PLANTS
-    models.WaterLevel.create(level=52)
-    for i in range(config.NUMBER_OF_PLANTS):
-        sun[i] += random.randint(-5, 5)
-        sun[i] = min(max(sun[i], 0), 100)
-        water[i] += random.randint(-5, 5)
-        water[i] = min(max(water[i], 0), 100)
-        temperature[i] += random.uniform(-5, 5)
-        temperature[i] = min(max(temperature[i], 0), 100)
-        humidity[i] = random.random() * 100
-    plants = [models.Plant.for_slot(slot_id, False)
-              for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
-    for index, plant in enumerate(plants):
-        if plant:
-            plant.record_sensor("light", sun[index])
-            plant.record_sensor("water", water[index])
-            plant.record_sensor("humidity", humidity[index])
-            plant.record_sensor("temperature", temperature[index])
+    if config.DEBUG:
+        import random
+        sun = [25] * config.NUMBER_OF_PLANTS
+        water = [20] * config.NUMBER_OF_PLANTS
+        humidity = [67.0] * config.NUMBER_OF_PLANTS
+        temperature = [87.1] * config.NUMBER_OF_PLANTS
+        models.WaterLevel.create(level=52)
+        for i in range(config.NUMBER_OF_PLANTS):
+            sun[i] += random.randint(-5, 5)
+            sun[i] = min(max(sun[i], 0), 100)
+            water[i] += random.randint(-5, 5)
+            water[i] = min(max(water[i], 0), 100)
+            temperature[i] += random.uniform(-5, 5)
+            temperature[i] = min(max(temperature[i], 0), 100)
+            humidity[i] = random.random() * 100
+        plants = [models.Plant.for_slot(slot_id, False)
+                  for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
+        for index, plant in enumerate(plants):
+            if plant:
+                plant.record_sensor("light", sun[index])
+                plant.record_sensor("water", water[index])
+                plant.record_sensor("humidity", humidity[index])
+                plant.record_sensor("temperature", temperature[index])
+    else:
+        # Production, as in on the pi
+        for plant in models.Plant.all():
+            sensor = services.Sensor(plant)
+            sensor.get_values()
+        services.Sensor.get_water_level()
 
 @background.task
 def notify_plant_condition(): # pragma: no cover

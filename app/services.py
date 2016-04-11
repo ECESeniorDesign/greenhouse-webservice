@@ -3,6 +3,16 @@ import requests
 from config import PLANT_DATABASE
 import models
 from greenhouse_envmgmt.control import ControlCluster
+try:
+    # This will fail on systems without linux/types.h
+    import smbus
+    from greenhouse_envmgmt.sense import SensorCluster
+    ControlCluster.bus = smbus.SMBus(1)
+    SensorCluster.bus = ControlCluster.bus
+except:
+    # HACK so that SensorCluster is defined when the above import fails
+    # this is to allow automated testing even when smbus cannot be installed
+    SensorCluster = None
 
 class Notifier(object):
 
@@ -76,3 +86,20 @@ class Control(object):
 
     def off(self):
         Control.cluster.control(off=self.name)
+
+class Sensor(object):
+    """Wrapper for greenhouse_envmgmt Sensor API"""
+
+    def __init__(self, plant):
+        self.plant = plant
+
+    def get_values(self):
+        cluster = SensorCluster(ID=self.plant.slot_id)
+        values = cluster.sensor_values()
+        for sensor, value in values.items():
+            self.plant.record_sensor(sensor, value)
+
+    @classmethod
+    def get_water_level(cls):
+        level = SensorCluster.get_water_level()
+        models.WaterLevel.create(level=level*100)

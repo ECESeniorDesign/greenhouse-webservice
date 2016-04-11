@@ -163,6 +163,36 @@ class TestControl(unittest.TestCase):
         control.off()
         cluster.control.assert_called_with(off="light")
 
+@mock.patch("app.services.SensorCluster")
+class TestSensor(unittest.TestCase):
+
+    def test_gets_values(self, SensorCluster):
+        plant = mock.Mock(name="plant", slot_id=1)
+        sensor = services.Sensor(plant)
+        cluster = SensorCluster.return_value
+        cluster.sensor_values.return_value = {
+            "light": 15.0,
+            "water": 19.1,
+            "humidity": 94.2,
+            "temperature": 57.2
+        }
+        sensor.get_values()
+        SensorCluster.assert_called_with(ID=1)
+        cluster.sensor_values.assert_called_with()
+        self.assertItemsEqual(plant.record_sensor.mock_calls, [
+            mock.call("light", 15.0),
+            mock.call("water", 19.1),
+            mock.call("humidity", 94.2),
+            mock.call("temperature", 57.2)
+        ])
+
+    @mock.patch("app.services.models.WaterLevel")
+    def test_gets_water_level(self, WaterLevel, SensorCluster):
+        SensorCluster.get_water_level.return_value = 0.87
+        services.Sensor.get_water_level()
+        SensorCluster.get_water_level.assert_called_with()
+        WaterLevel.create.assert_called_with(level=87)
+
 
 if __name__ == '__main__':
     unittest.main()
