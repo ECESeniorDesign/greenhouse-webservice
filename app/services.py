@@ -29,15 +29,23 @@ def PlantNotifier(threshold):
     def callback():
         threshold.triggered_at = datetime.datetime.now()
         threshold.save()
-    return Notifier({'title': '"{}" needs attention!'.format(threshold.plant.name),
-                     'message': ('Check up on your {} to ensure that '
-                                'it is alright!').format(threshold.plant.name)
+    plant = threshold.plant
+    sensor = threshold.sensor_name
+    ideal = getattr(plant, sensor + "_ideal")
+    current = threshold.sensor_data_points.last().sensor_value
+    if current > ideal:
+        status = "high"
+    else:
+        status = "low"
+    return Notifier({'title': '"{}" {} {}!'.format(plant.name, sensor, status),
+                     'message': 'Your {}\'s {} is {} ({}). It should be {}'.format(
+                                    plant.name, sensor, status, current, ideal)
                      }, callback)
 
 def WaterLevelNotifier(level):
     return Notifier({
-        'title': "Water Level Low!",
-        'message': "Please fill the greenhouse's water tank, it has only 12% remaining"
+        'title': "Greenhouse Water Level Low!",
+        'message': "Please fill the greenhouse's water tank, it has only {}% remaining".format(level)
     })
 
 class PlantUpdater(object):

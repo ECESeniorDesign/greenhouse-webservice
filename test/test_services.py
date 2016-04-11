@@ -13,13 +13,20 @@ import app.models as models
 class TestPlantNotifier(unittest.TestCase):
 
     def setUp(self):
-        plant = mock.Mock(name="plant")
+        plant = mock.Mock(name="plant", water_ideal=50.0)
         plant.name = "Hydrangea"
+        sdp = mock.Mock(sensor_value=84.2)
+        query_mock = mock.Mock(
+            name="lazy_record.Query",
+            last=mock.Mock(return_value=sdp)
+        )
         self.notification_threshold = mock.Mock(
             name="notification_threshold",
+            sensor_name="water",
             plant=plant,
             save=mock.Mock(),
-            triggered_at=dt(2011, 01, 1))
+            triggered_at=dt(2011, 01, 1),
+            sensor_data_points=query_mock)
         self.notifier = services.PlantNotifier(self.notification_threshold)
 
     @mock.patch("app.services.datetime.datetime")
@@ -30,13 +37,38 @@ class TestPlantNotifier(unittest.TestCase):
                          dt(2016, 02, 11))
         self.notification_threshold.save.assert_called_with()
 
-    def test_sends_notification(self, post, Token):
+    def test_sends_notification_when_high(self, post, Token):
         self.notifier.notify()
         token = Token.last.return_value.token
         post.assert_called_with(
             "http://{}/api/notify".format(PLANT_DATABASE),
-            data={'title': '"Hydrangea" needs attention!',
-                  'message': 'Check up on your Hydrangea to ensure that it is alright!',
+            data={'title': '"Hydrangea" water high!',
+                  'message': 'Your Hydrangea\'s water is high (84.2). It should be 50.0',
+                  'token': token}
+        )
+
+    def test_sends_notification_when_low(self, post, Token):
+        plant = mock.Mock(name="plant", water_ideal=50.0)
+        plant.name = "Hydrangea"
+        sdp = mock.Mock(sensor_value=15.2)
+        query_mock = mock.Mock(
+            name="lazy_record.Query",
+            last=mock.Mock(return_value=sdp)
+        )
+        notification_threshold = mock.Mock(
+            name="notification_threshold",
+            sensor_name="water",
+            plant=plant,
+            save=mock.Mock(),
+            triggered_at=dt(2011, 01, 1),
+            sensor_data_points=query_mock)
+        notifier = services.PlantNotifier(notification_threshold)
+        notifier.notify()
+        token = Token.last.return_value.token
+        post.assert_called_with(
+            "http://{}/api/notify".format(PLANT_DATABASE),
+            data={'title': '"Hydrangea" water low!',
+                  'message': 'Your Hydrangea\'s water is low (15.2). It should be 50.0',
                   'token': token}
         )
 
@@ -65,15 +97,15 @@ class TestPlantNotifier(unittest.TestCase):
 class TestWaterLevelNotifier(unittest.TestCase):
 
     def setUp(self):
-        self.notifier = services.WaterLevelNotifier(12)
+        self.notifier = services.WaterLevelNotifier(18)
 
     def test_sends_notification(self, post, Token):
         self.notifier.notify()
         token = Token.last.return_value.token
         post.assert_called_with(
             "http://{}/api/notify".format(PLANT_DATABASE),
-            data={'title': 'Water Level Low!',
-                  'message': 'Please fill the greenhouse\'s water tank, it has only 12% remaining',
+            data={'title': 'Greenhouse Water Level Low!',
+                  'message': 'Please fill the greenhouse\'s water tank, it has only 18% remaining',
                   'token': token}
         )
 
