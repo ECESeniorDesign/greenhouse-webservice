@@ -23,11 +23,6 @@ def main():
     elif sys.argv[1] == "console":
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
     elif sys.argv[1] == "production":
-        # Remove this for production
-        import mock
-        app.webservice.models.services.ControlCluster.bus = mock.Mock(
-            name="bus")
-
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
         coffee.precompile(app.webservice.app)
         app.webservice.config.DEBUG = False
