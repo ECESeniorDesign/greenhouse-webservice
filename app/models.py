@@ -424,3 +424,26 @@ class Control(lazy_record.Base):
             return after_start and before_end
         else:
             return after_start or before_end
+
+
+class PlantConditions(object):
+
+    points = 5
+
+    def __init__(self, *plants):
+        self.plants = plants
+
+    def conditions(self):
+        return {
+            sensor: self.average_value_of(sensor)
+            for sensor in SensorDataPoint.SENSORS
+        }
+
+    def average_value_of(self, sensor):
+        values = []
+        for plant in self.plants:
+            datapoints = list(plant.sensor_data_points
+                                   .where(sensor_name=sensor))
+            for value in datapoints[-PlantConditions.points:]:
+                values.append(value.sensor_value)
+        return sum(values) / len(values)

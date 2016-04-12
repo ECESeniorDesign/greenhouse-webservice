@@ -220,6 +220,12 @@ class TestIdealConditions(unittest.TestCase):
         # Upper for out of range
         self.assertFalse(self.conditions.near_ideal("water", 61))
 
+    def test_ideal_is_same_as_plant_with_one_plant(self):
+        conditions = policies.IdealConditions(self.plant1)
+        self.assertEqual(conditions.ideal("water"), self.plant1.water_ideal)
+        self.assertEqual(conditions.ideal("light"), self.plant1.light_ideal)
+        self.assertEqual(conditions.max("water"),
+            self.plant1.water_ideal + self.plant1.water_tolerance * 0.75)
 
 class TestControlActivationPolicy(unittest.TestCase):
 

@@ -731,6 +731,35 @@ class TestGlobalSetting(unittest.TestCase):
         singleton.save.assert_called_with()
 
 
+class TestPlantConditions(unittest.TestCase):
+
+    def createPlant(self, id):
+        plant = plant_fixture()
+        plant.slot_id = id
+        plant.save()
+        for sensor in models.SensorDataPoint.SENSORS:
+            for i in range(10):
+                plant.record_sensor(sensor, i)
+        plant.save()
+        return plant
+
+    def setUp(self):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+        plant1 = self.createPlant(1)
+        plant2 = self.createPlant(2)
+        self.conditions = models.PlantConditions(plant1, plant2)
+
+    def test_conditions_is_average_of_plant_values(self):
+        self.assertEqual(self.conditions.conditions(), {
+            "light": 7,
+            "water": 7,
+            "humidity": 7,
+            "temperature": 7
+        })
+
+
 def plant_json():
     return {
                "water_tolerance": 30.0,

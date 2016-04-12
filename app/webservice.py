@@ -640,6 +640,24 @@ def destroy_old_tokens(): # pragma: no cover
                     datetime.datetime.today() - datetime.timedelta(days=1)):
         token.destroy()
 
+@background.task
+def toggle_controls(): # pragma: no cover
+    """Enable and disable controls as determined by the policies"""
+    plants = list(models.Plant.all())
+    conditions = models.PlantConditions(*plants).conditions()
+    ideal_conditions = policies.IdealConditions(*plants)
+    controls = {
+        control.name: control
+        for control in models.Control.all()
+    }
+    control_policy = policies.ControlActivationPolicy(ideal_conditions,
+                                                      conditions, controls)
+    for name, control in controls.items():
+        if control_policy.should_activate(name):
+            control.activate()
+        elif control_policy.should_deactivate(name):
+            control.deactivate()
+
 @daily.task
 def updated_plants(): # pragma: no cover
     for plant in models.Plant.all():
