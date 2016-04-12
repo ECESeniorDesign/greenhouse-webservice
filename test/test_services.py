@@ -114,6 +114,10 @@ class TestWaterLevelNotifier(unittest.TestCase):
         self.assertEqual(self.notifier.notify(),
                          services.Notifier.InvalidCredentials)
 
+    def test_errors_silently_if_no_token(self, post, Token):
+        Token.last.return_value = None
+        self.assertEqual(None, self.notifier.notify())
+
 
 @mock.patch("app.models.PlantDatabase.plant_params")
 class TestPlantUpdater(unittest.TestCase):
