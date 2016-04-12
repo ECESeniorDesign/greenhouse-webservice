@@ -24,7 +24,11 @@ class Notifier(object):
         self.callback = callback
 
     def notify(self):
-        self.data['token'] = models.Token.last().token
+        token = models.Token.last()
+        if token:
+            self.data['token'] = token.token
+        else:
+            return
         try:
             response = requests.post("http://{}/api/notify".format(PLANT_DATABASE),
                                      data=self.data)
