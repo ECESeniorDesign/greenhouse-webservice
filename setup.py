@@ -26,6 +26,7 @@ def main():
         app.webservice.models.lazy_record.connect_db(config.DATABASE)
         coffee.precompile(app.webservice.app)
         app.webservice.config.DEBUG = False
+        app.webservice.config.PORT = 80
         app.webservice.run()
 
 if __name__ == '__main__':

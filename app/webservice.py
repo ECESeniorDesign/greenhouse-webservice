@@ -666,4 +666,4 @@ def updated_plants(): # pragma: no cover
 def run(): # pragma: no cover
     background.run()
     daily.run()
-    socketio.run(app, debug=config.DEBUG, host="0.0.0.0")
+    socketio.run(app, debug=config.DEBUG, host="0.0.0.0", port=config.PORT)
