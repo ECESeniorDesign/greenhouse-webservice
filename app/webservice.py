@@ -618,7 +618,8 @@ def notify_plant_condition(): # pragma: no cover
             if policies.NotificationPolicy(nt).should_notify():
                 services.PlantNotifier(nt).notify()
 
-@background.task
+# Only need to do once a day. Water should NOT run out in that time.
+@daily.task
 def notify_water_level(): # pragma: no cover
     if models.GlobalSetting.notify_maintenance:
         water_level = models.WaterLevel.last()
