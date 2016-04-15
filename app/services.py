@@ -7,12 +7,19 @@ try:
     # This will fail on systems without linux/types.h
     import smbus
     from greenhouse_envmgmt.sense import SensorCluster
+    import greenhouse_envmgmt.sense
     ControlCluster.bus = smbus.SMBus(1)
     SensorCluster.bus = ControlCluster.bus
 except:
     # HACK so that SensorCluster is defined when the above import fails
     # this is to allow automated testing even when smbus cannot be installed
     SensorCluster = None
+    class greenhouse_envmgmt(object):
+        class sense(object):
+            class I2CBusError(Exception):
+                pass
+            class SensorError(Exception):
+                pass
 
 class Notifier(object):
 
@@ -98,10 +105,16 @@ class Sensor(object):
         self.plant = plant
 
     def get_values(self):
-        cluster = SensorCluster(ID=self.plant.slot_id)
-        values = cluster.sensor_values()
-        for sensor, value in values.items():
-            self.plant.record_sensor(sensor, value)
+        try:
+            cluster = SensorCluster(ID=self.plant.slot_id)
+            values = cluster.sensor_values()
+            for sensor, value in values.items():
+                self.plant.record_sensor(sensor, value)
+        except:
+            # Something has gone wrong
+            # (module disconnected, had an error collecting, etc.)
+            # Don't let it crash the webserver.
+            pass
 
     @classmethod
     def get_water_level(cls):

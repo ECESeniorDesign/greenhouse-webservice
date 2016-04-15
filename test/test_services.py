@@ -197,6 +197,27 @@ class TestSensor(unittest.TestCase):
         SensorCluster.get_water_level.assert_called_with()
         WaterLevel.create.assert_called_with(level=87)
 
+    def test_get_values_silently_exits_on_ioerror(self, SensorCluster):
+        plant = mock.Mock(name="plant", slot_id=1)
+        sensor = services.Sensor(plant)
+        cluster = SensorCluster.return_value
+        cluster.sensor_values.side_effect = IOError
+        self.assertEqual(sensor.get_values(), None)
+
+    def test_get_values_silently_exits_on_buserror(self, SensorCluster):
+        plant = mock.Mock(name="plant", slot_id=1)
+        sensor = services.Sensor(plant)
+        cluster = SensorCluster.return_value
+        cluster.sensor_values.side_effect = services.greenhouse_envmgmt.sense.I2CBusError
+        self.assertEqual(sensor.get_values(), None)
+
+    def test_get_values_silently_exits_on_sensorerror(self, SensorCluster):
+        plant = mock.Mock(name="plant", slot_id=1)
+        sensor = services.Sensor(plant)
+        cluster = SensorCluster.return_value
+        cluster.sensor_values.side_effect = services.greenhouse_envmgmt.sense.SensorError
+        self.assertEqual(sensor.get_values(), None)
+
 
 if __name__ == '__main__':
     unittest.main()
