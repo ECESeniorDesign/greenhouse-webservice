@@ -447,4 +447,6 @@ class PlantConditions(object):
                                    .last(PlantConditions.points))
             for value in datapoints:
                 values.append(value.sensor_value)
+        if len(values) == 0:
+            return None
         return sum(values) / len(values)

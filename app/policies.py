@@ -177,9 +177,11 @@ class ControlActivationPolicy(object):
     def should_activate(self, control_name):
 
         def below_min(metric):
+            if self.conditions[metric] is None: return False
             return self.conditions[metric] < self.ideal_conditions.min(metric)
 
         def above_max(metric):
+            if self.conditions[metric] is None: return False
             return self.conditions[metric] > self.ideal_conditions.max(metric)
 
         control = self.controls[control_name]
@@ -194,9 +196,11 @@ class ControlActivationPolicy(object):
     def should_deactivate(self, control_name):
 
         def below_ideal(metric):
+            if self.conditions[metric] is None: return True
             return self.conditions[metric] < self.ideal_conditions.ideal(metric)
 
         def above_ideal(metric):
+            if self.conditions[metric] is None: return True
             return self.conditions[metric] > self.ideal_conditions.ideal(metric)
 
         control = self.controls[control_name]

@@ -230,13 +230,13 @@ class TestIdealConditions(unittest.TestCase):
 class TestControlActivationPolicy(unittest.TestCase):
 
     def setUp(self):
-        self.conditions = {
+        conditions = {
             "water": {"ideal": 51.0, "min": 21.0, "max": 71.0},
             "light": {"ideal": 51.0, "min": 21.0, "max": 71.0},
             "humidity": {"ideal": 51.0, "min": 21.0, "max": 71.0},
             "temperature": {"ideal": 51.0, "min": 21.0, "max": 71.0}
         }
-        self.ideal_conditions = IdealConditionsStub(self.conditions)
+        self.ideal_conditions = IdealConditionsStub(conditions)
         self.controls = {
             "light": mock.Mock(name="light_control", may_activate=True, active=False),
             "pump": mock.Mock(name="pump_control", may_activate=True, active=False),
@@ -349,6 +349,28 @@ class TestControlActivationPolicy(unittest.TestCase):
         self.controls["fan"].active = True
         self.conditions["humidity"] = 55.0
         self.assertFalse(self.policy.should_deactivate("pump"))
+
+    def test_deactivates_if_no_data(self):
+        self.conditions["humidity"] = None
+        self.conditions["light"] = None
+        self.conditions["water"] = None
+        self.conditions["temperature"] = None
+        self.controls["pump"].active = True
+        self.controls["light"].active = True
+        self.controls["fan"].active = True
+        self.assertTrue(self.policy.should_deactivate("pump"))
+        self.assertTrue(self.policy.should_deactivate("light"))
+        self.assertTrue(self.policy.should_deactivate("fan"))
+
+    def test_no_activates_if_no_data(self):
+        self.conditions["humidity"] = None
+        self.conditions["light"] = None
+        self.conditions["water"] = None
+        self.conditions["temperature"] = None
+        self.assertFalse(self.policy.should_activate("pump"))
+        self.assertFalse(self.policy.should_activate("light"))
+        self.assertFalse(self.policy.should_activate("fan"))
+
 
 class IdealConditionsStub(object):
 

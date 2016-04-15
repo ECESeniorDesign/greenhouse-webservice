@@ -759,6 +759,15 @@ class TestPlantConditions(unittest.TestCase):
             "temperature": 7
         })
 
+    def test_conditions_is_None_if_no_data(self):
+        conditions = models.PlantConditions()
+        self.assertEqual(conditions.conditions(), {
+            "light": None,
+            "water": None,
+            "humidity": None,
+            "temperature": None
+        })
+
 
 def plant_json():
     return {
