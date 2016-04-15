@@ -115,10 +115,10 @@ class TestLogDataPresenter(unittest.TestCase):
 class TestChartDataPresenter(unittest.TestCase):
 
     def test_formats_and_filters_history_chart_data_light(self):
-        data = [1.2, 3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
+        data = [3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
         p = plant(sensor_data_points=mock.Mock(light=mock.Mock(
-            return_value=[mock.Mock(sensor_value=v)
-                          for v in data])))
+            return_value=mock.Mock(last=mock.Mock(return_value=[mock.Mock(sensor_value=v)
+                          for v in data])))))
         presenter = presenters.ChartDataPresenter(p)
         self.assertEqual(presenter.history_chart_data_for("light"), {
             "labels": ["", "", "", "", "", "", "", ""],
@@ -133,10 +133,10 @@ class TestChartDataPresenter(unittest.TestCase):
         })
 
     def test_formats_and_filters_history_chart_data_water(self):
-        data = [1.2, 3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
+        data = [3.6, 12.0, 65.0, 11.0, 3.2, 6.7, 15.2, 88.5]
         p = plant(sensor_data_points=mock.Mock(water=mock.Mock(
-            return_value=[mock.Mock(sensor_value=v)
-                          for v in data])))
+            return_value=mock.Mock(last=mock.Mock(return_value=[mock.Mock(sensor_value=v)
+                          for v in data])))))
         presenter = presenters.ChartDataPresenter(p)
         self.assertEqual(presenter.history_chart_data_for("water"), {
             "labels": ["", "", "", "", "", "", "", ""],

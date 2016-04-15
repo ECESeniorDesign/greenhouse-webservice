@@ -443,7 +443,8 @@ class PlantConditions(object):
         values = []
         for plant in self.plants:
             datapoints = list(plant.sensor_data_points
-                                   .where(sensor_name=sensor))
-            for value in datapoints[-PlantConditions.points:]:
+                                   .where(sensor_name=sensor)
+                                   .last(PlantConditions.points))
+            for value in datapoints:
                 values.append(value.sensor_value)
         return sum(values) / len(values)

@@ -157,8 +157,8 @@ class ChartDataPresenter(object):
     def history_chart_data_for(self, sensor):
         # For some reason, it is getting 2 new points per cycle -- caused by being in debug mode
         num_points = 8
-        points = getattr(self.plant.sensor_data_points, sensor)()
-        data = [point.sensor_value for point in points][-num_points:]
+        points = getattr(self.plant.sensor_data_points, sensor)().last(num_points)
+        data = [point.sensor_value for point in points]
         return  {
                     "labels": [""] * num_points,
                     "datasets": [
