@@ -81,6 +81,15 @@ class Plant(lazy_record.Base):
             json_object["maturity"])
         return plant
 
+    def destroy(self):
+        if self.id:
+            with lazy_record.repo.Repo.db:
+                # Remove all sensor data points in one transaction
+                lazy_record.repo.Repo("sensor_data_points"
+                    ).where(plant_id=self.id).delete()
+
+        super(Plant, self).destroy()
+
 @belongs_to("plant")
 class SensorDataPoint(lazy_record.Base):
 
