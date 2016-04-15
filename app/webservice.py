@@ -44,6 +44,7 @@ app.secret_key = config.SECRET_KEY
 router = router.Router(app)
 background = BackgroundTaskRunner(refresh=10)
 daily = BackgroundTaskRunner(refresh=24 * 3600)
+minutely = BackgroundTaskRunner(refresh=60)
 
 # Routing & Controllers
 
@@ -579,7 +580,7 @@ def update_control(control_id, status):
 def load_sensor_data():
     socketio.emit('data-update', True, namespace="/plants")
 
-@background.task
+@minutely.task
 def create_sensor_data(): # pragma: no cover
     if config.DEBUG:
         import random
@@ -626,6 +627,14 @@ def notify_water_level(): # pragma: no cover
         if policies.WaterNotificationPolicy(water_level).should_notify():
             # Implicit: water_level exists if the policy returns true
             services.WaterLevelNotifier(water_level.level).notify()
+
+@daily.task
+def clean_old_sensor_data(): # pragma: no cover
+    cutoff = datetime.datetime.today() - datetime.timedelta(days=20)
+    with modelds.lazy_record.repo.Repo.db:
+        # Remove sensor data points in one transaction
+        models.lazy_record.repo.Repo("sensor_data_points"
+            ).where("created_at < ?", cutoff).delete()
 
 @background.task
 def refresh_token(): # pragma: no cover
