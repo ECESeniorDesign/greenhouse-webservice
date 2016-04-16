@@ -580,7 +580,7 @@ def update_control(control_id, status):
 def load_sensor_data():
     socketio.emit('data-update', True, namespace="/plants")
 
-@minutely.task
+@background.task
 def create_sensor_data(): # pragma: no cover
     if config.DEBUG:
         import random
@@ -630,11 +630,14 @@ def notify_water_level(): # pragma: no cover
 
 @daily.task
 def clean_old_sensor_data(): # pragma: no cover
-    cutoff = datetime.datetime.today() - datetime.timedelta(days=20)
+    cutoff = datetime.datetime.today() - datetime.timedelta(days=7)
     with modelds.lazy_record.repo.Repo.db:
         # Remove sensor data points in one transaction
         models.lazy_record.repo.Repo("sensor_data_points"
             ).where("created_at < ?", cutoff).delete()
+        # Remove water level in one transaction
+        models.lazy_record.repo.Repo("water_levels"
+                ).where("created_at < ?", cutoff).delete()
 
 @background.task
 def refresh_token(): # pragma: no cover
