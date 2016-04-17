@@ -7,5 +7,5 @@ SCHEMA = os.path.join(os.path.dirname(__file__), "schema.sql")
 DEBUG = True
 SECRET_KEY = "development key"
 PORT = 5000
-PLANT_DATABASE = "localhost:4000"
+PLANT_DATABASE = "greenhouse.conklins.net"
 NUMBER_OF_PLANTS = 2
