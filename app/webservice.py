@@ -631,13 +631,13 @@ def notify_water_level(): # pragma: no cover
 @daily.task
 def clean_old_sensor_data(): # pragma: no cover
     cutoff = datetime.datetime.today() - datetime.timedelta(days=7)
-    with modelds.lazy_record.repo.Repo.db:
+    with models.lazy_record.repo.Repo.db:
         # Remove sensor data points in one transaction
         models.lazy_record.repo.Repo("sensor_data_points"
-            ).where("created_at < ?", cutoff).delete()
+            ).where([("created_at < ?", cutoff)]).delete()
         # Remove water level in one transaction
         models.lazy_record.repo.Repo("water_levels"
-                ).where("created_at < ?", cutoff).delete()
+                ).where([("created_at < ?", cutoff)]).delete()
 
 @background.task
 def refresh_token(): # pragma: no cover
