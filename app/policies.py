@@ -196,9 +196,13 @@ class ControlActivationPolicy(object):
         if control.active or not control.may_activate:
             return False
         effects = ControlActivationPolicy.control_effects
-        return all(below_min(metric)
+        return (any(below_min(metric)
+                   for metric in effects[control_name]["increases"]) or \
+                any(above_max(metric)
+                    for metric in effects[control_name]["decreases"])) and \
+               not any(above_max(metric)
                    for metric in effects[control_name]["increases"]) and \
-               all(above_max(metric)
+               not any(below_min(metric)
                    for metric in effects[control_name]["decreases"])
 
     def should_deactivate(self, control_name):

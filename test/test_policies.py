@@ -294,12 +294,9 @@ class TestControlActivationPolicy(unittest.TestCase):
     def test_activates_pump_if_humid_and_water_below_min(self):
         self.assertTrue(self.policy.should_activate("pump"))
 
-    def test_does_not_activate_pump_if_water_above_min(self):
-        self.conditions["water"] = 25.0
-        self.assertFalse(self.policy.should_activate("pump"))
-
-    def test_does_not_activate_pump_if_humidity_above_min(self):
+    def test_does_not_activate_pump_if_humidity_and_water_above_min(self):
         self.conditions["humidity"] = 25.0
+        self.conditions["water"] = 25.0
         self.assertFalse(self.policy.should_activate("pump"))
 
     def test_deactivates_lights_if_above_ideal(self):
