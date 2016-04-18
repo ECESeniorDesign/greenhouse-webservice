@@ -217,13 +217,30 @@ class ControlActivationPolicy(object):
                self.ideal_conditions.ideal(metric) is None: return True
             return self.conditions[metric] > self.ideal_conditions.ideal(metric)
 
+        def below_min(metric):
+            if self.conditions[metric] is None or \
+               self.ideal_conditions.ideal(metric) is None: return False
+            return self.conditions[metric] < self.ideal_conditions.min(metric)
+
+        def above_max(metric):
+            if self.conditions[metric] is None or \
+               self.ideal_conditions.ideal(metric) is None: return False
+            return self.conditions[metric] > self.ideal_conditions.max(metric)
+
         control = self.controls[control_name]
         if not control.active:
             return False
         if not control.may_activate:
             return True
         effects = ControlActivationPolicy.control_effects
-        return any(above_ideal(metric)
+        return (all(above_ideal(metric)
+                   for metric in effects[control_name]["increases"]) and
+                   len(effects[control_name]["increases"]) > 0) or \
+               (all(below_ideal(metric)
+                   for metric in effects[control_name]["decreases"]) and
+                   len(effects[control_name]["decreases"]) > 0) or \
+               any(above_max(metric)
                    for metric in effects[control_name]["increases"]) or \
-               any(below_ideal(metric)
+               any(below_min(metric)
                    for metric in effects[control_name]["decreases"])
+            
