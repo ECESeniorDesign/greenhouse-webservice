@@ -227,16 +227,23 @@ class TestIdealConditions(unittest.TestCase):
         self.assertEqual(conditions.max("water"),
             self.plant1.water_ideal + self.plant1.water_tolerance * 0.75)
 
+    def test_gives_no_data_if_no_plants(self):
+        conditions = policies.IdealConditions()
+        self.assertEqual(conditions.ideal("water"), None)
+        self.assertEqual(conditions.ideal("light"), None)
+        self.assertEqual(conditions.max("water"), None)
+
+
 class TestControlActivationPolicy(unittest.TestCase):
 
     def setUp(self):
-        conditions = {
+        self.iconditions = {
             "water": {"ideal": 51.0, "min": 21.0, "max": 71.0},
             "light": {"ideal": 51.0, "min": 21.0, "max": 71.0},
             "humidity": {"ideal": 51.0, "min": 21.0, "max": 71.0},
             "temperature": {"ideal": 51.0, "min": 21.0, "max": 71.0}
         }
-        self.ideal_conditions = IdealConditionsStub(conditions)
+        self.ideal_conditions = IdealConditionsStub(self.iconditions)
         self.controls = {
             "light": mock.Mock(name="light_control", may_activate=True, active=False),
             "pump": mock.Mock(name="pump_control", may_activate=True, active=False),
@@ -367,6 +374,27 @@ class TestControlActivationPolicy(unittest.TestCase):
         self.conditions["light"] = None
         self.conditions["water"] = None
         self.conditions["temperature"] = None
+        self.assertFalse(self.policy.should_activate("pump"))
+        self.assertFalse(self.policy.should_activate("light"))
+        self.assertFalse(self.policy.should_activate("fan"))
+
+    def test_deactivates_if_no_ideal_conditions(self):
+        self.iconditions["humidity"] = {"ideal": None, "min": None, "max": None}
+        self.iconditions["light"] = {"ideal": None, "min": None, "max": None}
+        self.iconditions["water"] = {"ideal": None, "min": None, "max": None}
+        self.iconditions["temperature"] = {"ideal": None, "min": None, "max": None}
+        self.controls["pump"].active = True
+        self.controls["light"].active = True
+        self.controls["fan"].active = True
+        self.assertTrue(self.policy.should_deactivate("pump"))
+        self.assertTrue(self.policy.should_deactivate("light"))
+        self.assertTrue(self.policy.should_deactivate("fan"))
+
+    def test_no_activates_if_no_ideal_conditions(self):
+        self.iconditions["humidity"] = {"ideal": None, "min": None, "max": None}
+        self.iconditions["light"] = {"ideal": None, "min": None, "max": None}
+        self.iconditions["water"] = {"ideal": None, "min": None, "max": None}
+        self.iconditions["temperature"] = {"ideal": None, "min": None, "max": None}
         self.assertFalse(self.policy.should_activate("pump"))
         self.assertFalse(self.policy.should_activate("light"))
         self.assertFalse(self.policy.should_activate("fan"))

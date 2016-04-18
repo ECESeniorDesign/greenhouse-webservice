@@ -81,6 +81,8 @@ class IdealConditions(object):
 
     def ideal(self, metric):
         """Returns the ideal +metric+ value for the plants"""
+        if len(self.plants) == 0:
+            return None
         weighted_sum = sum(self._ideal_value(plant, metric) / \
                            self._tolerance_value(plant, metric)
                            for plant in self.plants)
@@ -90,6 +92,8 @@ class IdealConditions(object):
 
     def max(self, metric):
         """Returns the max +metric+ value for the plants"""
+        if len(self.plants) == 0:
+            return None
         if self._cannot_pad(metric):
             return self._absolute_max(metric)
         else:
@@ -97,6 +101,8 @@ class IdealConditions(object):
 
     def min(self, metric):
         """Returns the min +metric+ value for the plants"""
+        if len(self.plants) == 0:
+            return None
         if self._cannot_pad(metric):
             return self._absolute_min(metric)
         else:
@@ -177,11 +183,13 @@ class ControlActivationPolicy(object):
     def should_activate(self, control_name):
 
         def below_min(metric):
-            if self.conditions[metric] is None: return False
+            if self.conditions[metric] is None or \
+               self.ideal_conditions.ideal(metric) is None: return False
             return self.conditions[metric] < self.ideal_conditions.min(metric)
 
         def above_max(metric):
-            if self.conditions[metric] is None: return False
+            if self.conditions[metric] is None or \
+               self.ideal_conditions.ideal(metric) is None: return False
             return self.conditions[metric] > self.ideal_conditions.max(metric)
 
         control = self.controls[control_name]
@@ -196,11 +204,13 @@ class ControlActivationPolicy(object):
     def should_deactivate(self, control_name):
 
         def below_ideal(metric):
-            if self.conditions[metric] is None: return True
+            if self.conditions[metric] is None or \
+               self.ideal_conditions.ideal(metric) is None: return True
             return self.conditions[metric] < self.ideal_conditions.ideal(metric)
 
         def above_ideal(metric):
-            if self.conditions[metric] is None: return True
+            if self.conditions[metric] is None or \
+               self.ideal_conditions.ideal(metric) is None: return True
             return self.conditions[metric] > self.ideal_conditions.ideal(metric)
 
         control = self.controls[control_name]
