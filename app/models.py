@@ -283,6 +283,14 @@ class WaterLevel(lazy_record.Base):
         "level": int,
     }
 
+    @classmethod
+    def current(cls):
+        record = cls.last()
+        if record:
+            return record.level
+        else:
+            return None
+
 
 class GlobalSetting(lazy_record.Base):
 
@@ -418,6 +426,12 @@ class Control(lazy_record.Base):
 
     @property
     def may_activate(self):
+        # This feels somewhat hackish
+        if self.name == "pump":
+            # This returns an integer or None.
+            # The comparison with None will always be true
+            if WaterLevel.current() < 15:
+                return False
         # Cannot activate if not currently enabled
         if self.enabled in (False, Control.TemporarilyDisabled):
             return False

@@ -682,6 +682,11 @@ class TestControl(unittest.TestCase):
             dat.now.return_value = dt(2016, 05, 11, 3, 15)
             self.assertFalse(control.may_activate)
 
+    def test_pump_may_not_activate_when_no_water(self):
+        models.WaterLevel.create(level=12)
+        control = models.Control.create(name="pump",
+                                        enabled=True)
+        self.assertFalse(control.may_activate)
 
 class TestGlobalSetting(unittest.TestCase):
 
@@ -767,6 +772,22 @@ class TestPlantConditions(unittest.TestCase):
             "humidity": None,
             "temperature": None
         })
+
+
+class TestWaterLevel(unittest.TestCase):
+
+    def setUp(self):
+        models.lazy_record.connect_db(TEST_DATABASE)
+        with open(SCHEMA) as schema:
+            models.lazy_record.load_schema(schema.read())
+
+    def test_current_is_None_with_no_data(self):
+        self.assertEqual(models.WaterLevel.current(), None)
+
+    def test_current_returns_last_level(self):
+        for i in [15, 37, 21, 7, 3, 8]:
+            models.WaterLevel.create(level=i)
+        self.assertEqual(models.WaterLevel.current(), 8)
 
 
 def plant_json():

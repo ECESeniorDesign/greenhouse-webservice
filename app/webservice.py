@@ -55,14 +55,10 @@ class PlantsController(object):
     def index():
         plants = [(models.Plant.for_slot(slot_id, False), slot_id)
                   for slot_id in range(1, config.NUMBER_OF_PLANTS + 1)]
-        water_level = models.WaterLevel.last()
-        if water_level:
-            water = water_level.level
-        else:
-            water = 0
+        water_level = models.WaterLevel.current() or 0
         return flask.render_template("plants/index.html",
                                      plants=plants,
-                                     water=water)
+                                     water=water_level)
 
     @staticmethod
     def new():
