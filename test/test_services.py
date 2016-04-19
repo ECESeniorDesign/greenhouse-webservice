@@ -221,6 +221,10 @@ class TestSensor(unittest.TestCase):
         cluster.sensor_values.side_effect = services.greenhouse_envmgmt.sense.SensorError
         self.assertEqual(sensor.get_values(), None)
 
+    def test_get_water_level_silently_exits_on_ioerror(self, SensorCluster):
+        SensorCluster.get_water_level.side_effect = IOError
+        self.assertEqual(services.Sensor.get_water_level(), None)
+
 
 if __name__ == '__main__':
     unittest.main()

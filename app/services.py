@@ -119,5 +119,8 @@ class Sensor(object):
 
     @classmethod
     def get_water_level(cls):
-        level = SensorCluster.get_water_level()
-        models.WaterLevel.create(level=level*100)
+        try:
+            level = SensorCluster.get_water_level()
+            models.WaterLevel.create(level=level*100)
+        except:
+            pass
