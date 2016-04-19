@@ -80,6 +80,7 @@ class PlantUpdater(object):
                 self.plant.plant_database_id,
                 filter=['maturity'])
             self.plant.update(**plant_data)
+            self.plant.save()
             return True
         except:
             return False

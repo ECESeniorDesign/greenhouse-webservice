@@ -153,6 +153,9 @@ class TestPlantUpdater(unittest.TestCase):
     def test_returns_true_on_success(self, plant_params):
         self.assertEqual(self.updater.update(), True)
 
+    def test_saves_updated_plant(self, plant_params):
+        self.updater.update()
+        self.plant.save.assert_called_with()
 
 @mock.patch("app.services.Control.cluster")
 class TestControl(unittest.TestCase):
