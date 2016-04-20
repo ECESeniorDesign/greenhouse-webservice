@@ -8,7 +8,7 @@ $(function() {
         baseHeight   = 0,
         $el;
     
-    $("a").on("click", function() {
+    $("a").not(".download").on("click", function() {
         _link = $(this).attr("href");
         history.pushState(null, null, _link);
         loadContent(_link);
